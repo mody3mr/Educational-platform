@@ -33,7 +33,7 @@
                 <i class="fa-solid fa-key"></i>
             </div>
             <h3 class="text-lg font-bold text-white mb-2">تفعيل المحاضرة</h3>
-            <p class="text-slate-400 text-sm mb-4">أدخل كود التفعيل المكون من 6 أرقام:</p>
+            <p class="text-slate-400 text-sm mb-4">أدخل كود التفعيل:</p>
             <input type="text" id="activation-code-input" placeholder="مثال: 366287" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-center font-mono font-bold tracking-widest text-lg mb-4 outline-none focus:border-amber-500" />
             <div class="flex gap-2">
                 <button id="submit-code-btn" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition">تفعيل</button>
@@ -42,7 +42,7 @@
         </div>
     </div>
 
-    <!-- نافذة إعدادات الطالب -->
+    <!-- نافذة الإعدادات والتنبيهات -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-gear text-sky-400 ml-2"></i>الإعدادات الشخصية</h3>
@@ -65,7 +65,6 @@
         </div>
     </div>
 
-    <!-- نافذة الإشعارات -->
     <div id="notifications-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
@@ -90,7 +89,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, updateDoc, arrayUnion, query, where, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, updateDoc, arrayUnion, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
@@ -215,13 +214,14 @@
             `;
             document.getElementById('profile-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const studentPhone = document.getElementById('studentPhone').value.trim();
-                const nationalId = document.getElementById('nationalId').value.trim();
                 await setDoc(doc(db, "users", user.uid), {
                     fullName: document.getElementById('fullName').value,
-                    studentPhone, fatherPhone: document.getElementById('fatherPhone').value,
-                    motherPhone: document.getElementById('motherPhone').value, nationalId,
-                    school: document.getElementById('school').value, governorate: document.getElementById('governorate').value,
+                    studentPhone: document.getElementById('studentPhone').value,
+                    fatherPhone: document.getElementById('fatherPhone').value,
+                    motherPhone: document.getElementById('motherPhone').value,
+                    nationalId: document.getElementById('nationalId').value,
+                    school: document.getElementById('school').value,
+                    governorate: document.getElementById('governorate').value,
                     academicYear: document.getElementById('academicYear').value,
                     unlockedCourses: [], readNotifications: [], deviceBlocked: false
                 });
@@ -301,7 +301,9 @@
             onSnapshot(collection(db, "courses"), (coursesSnap) => {
                 onSnapshot(collection(db, "activation_codes"), (codesSnap) => {
                     onSnapshot(collection(db, "notifications"), (notifSnap) => {
-                        loadStudentDataAndCourses(userData, user.uid, coursesSnap, codesSnap, notifSnap);
+                        onSnapshot(collection(db, "quiz_results"), (resultsSnap) => {
+                            loadStudentDataAndCourses(userData, user.uid, coursesSnap, codesSnap, notifSnap, resultsSnap);
+                        });
                     });
                 });
             });
@@ -335,7 +337,7 @@
             showModal("تم الإرسال", "تم إرسال طلب تعديل بياناتك للمعلم.");
         });
 
-        async function loadStudentDataAndCourses(userData, userId, coursesSnap, codesSnap, notifSnap) {
+        async function loadStudentDataAndCourses(userData, userId, coursesSnap, codesSnap, notifSnap, resultsSnap) {
             const grid = document.getElementById('courses-grid');
             const notifList = document.getElementById('notifications-list');
             const notifBadge = document.getElementById('notif-badge');
@@ -374,6 +376,15 @@
                     const codeObj = docSnap.data();
                     if (codeObj.isDisabled && codeObj.usedBy === userId) {
                         courseCodeDisabledMap[codeObj.courseId] = true;
+                    }
+                });
+
+                // تخزين نتائج امتحانات الطالب الحالية للتحقق من السماح بالإعادة
+                window.studentQuizResults = {};
+                resultsSnap.forEach(docSnap => {
+                    const r = docSnap.data();
+                    if (r.studentId === userId) {
+                        window.studentQuizResults[r.courseId] = r;
                     }
                 });
 
@@ -473,11 +484,35 @@
                 </a>
             `).join('') || `<p class="text-slate-500 text-xs">لا توجد ملفات مرفقة.</p>`;
 
-            let quizBtnHtml = (c.quiz && c.quiz.length > 0) ? `
-                <button onclick="window.startQuiz('${courseId}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-4 rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
-                    <i class="fa-solid fa-clipboard-question"></i> بدء امتحان المحاضرة (المدة: ${c.quizDuration || 10} دقائق)
-                </button>
-            ` : `<p class="text-slate-500 text-xs text-center">لا يوجد امتحان مضاف.</p>`;
+            // فحص هل الطالب امتحن قبل كدة وهل مسموح له بالإعادة؟
+            const studentRes = window.studentQuizResults ? window.studentQuizResults[courseId] : null;
+            let quizBtnHtml = '';
+
+            if (c.quiz && c.quiz.length > 0) {
+                if (studentRes && !studentRes.canRetake) {
+                    quizBtnHtml = `
+                        <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl text-center space-y-2">
+                            <p class="text-xs text-emerald-400 font-bold"><i class="fa-solid fa-check-circle"></i> لقد أتممت هذا الامتحان مسبقاً</p>
+                            <p class="text-sm font-mono font-bold text-amber-400">درجتك: ${studentRes.score} / ${studentRes.total}</p>
+                            <p class="text-[11px] text-slate-500">تم تسجيل النتيجة بنجاح. بانتظار موافقة المعلم لإعادة الامتحان لو أردت.</p>
+                        </div>
+                    `;
+                } else if (studentRes && studentRes.canRetake) {
+                    quizBtnHtml = `
+                        <button onclick="window.startQuiz('${courseId}')" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-4 rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
+                            <i class="fa-solid fa-rotate-right"></i> إعادة امتحان المحاضرة (مسموح لك من المعلم)
+                        </button>
+                    `;
+                } else {
+                    quizBtnHtml = `
+                        <button onclick="window.startQuiz('${courseId}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-4 rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                            <i class="fa-solid fa-clipboard-question"></i> بدء امتحان المحاضرة (المدة: ${c.quizDuration || 10} دقائق)
+                        </button>
+                    `;
+                }
+            } else {
+                quizBtnHtml = `<p class="text-slate-500 text-xs text-center">لا يوجد امتحان مضاف.</p>`;
+            }
 
             document.getElementById('dynamic-area').innerHTML = `
                 <button onclick="location.reload()" class="mb-6 flex items-center gap-2 text-sky-400 font-bold transition hover:text-sky-300">
@@ -512,7 +547,6 @@
 
         let quizTimerInterval = null;
 
-        // تشغيل نظام الامتحان مع المؤقت وحماية مغادرة الصفحة
         window.startQuiz = function(courseId) {
             const c = window.allCoursesData[courseId];
             if(!c || !c.quiz) return;
@@ -541,7 +575,7 @@
                     <div class="flex justify-between items-center pb-4 border-b border-slate-800">
                         <div>
                             <h2 class="text-xl font-black text-white">امتحان: ${c.title}</h2>
-                            <p class="text-slate-400 text-xs mt-1">تنبيه: مغادرة الصفحة تنهي الامتحان بدرجة (صفر).</p>
+                            <p class="text-slate-400 text-xs mt-1">تنبيه: مغادرة الصفحة أو الخروج من التبويب ينهي الامتحان بدرجة (صفر).</p>
                         </div>
                         <div class="bg-rose-500/10 border border-rose-500/30 text-rose-400 font-mono font-bold px-4 py-2 rounded-2xl text-lg flex items-center gap-2">
                             <i class="fa-solid fa-clock"></i> <span id="quiz-timer-display">--:--</span>
@@ -557,7 +591,6 @@
                 </div>
             `;
 
-            // بدء المؤقت
             const durationMin = c.quizDuration || 10;
             let timeLeft = durationMin * 60;
             
@@ -572,16 +605,15 @@
                 if(timeLeft <= 0) {
                     clearInterval(quizTimerInterval);
                     document.removeEventListener('visibilitychange', handleVisibilityHandler);
-                    submitExam(courseId, true); // انتهاء الوقت
+                    submitExam(courseId, true);
                 }
             }, 1000);
 
-            // حماية أمنية: مراقبة مغادرة التبويب / الصفحة
             const handleVisibilityHandler = () => {
                 if (document.hidden) {
                     clearInterval(quizTimerInterval);
                     document.removeEventListener('visibilitychange', handleVisibilityHandler);
-                    submitExam(courseId, false, true); // غادر الصفحة -> صفر
+                    submitExam(courseId, false, true);
                 }
             };
             document.addEventListener('visibilitychange', handleVisibilityHandler);
@@ -610,7 +642,7 @@
                     }
                 });
                 if (isTimeout) {
-                    showModal("انتهى الوقت", "انتهى الوقت المخصص، وتم تسجيل ما قمت بالإجابة عليه.", "sky");
+                    showModal("انتهى الوقت", "انتهى الوقت المخصص، وتم تسجيل إجاباتك.", "sky");
                 }
             }
 
@@ -618,9 +650,27 @@
             const userDoc = await getDoc(doc(db, "users", user.uid));
             const studentName = userDoc.exists() ? userDoc.data().fullName : "طالب";
 
-            await addDoc(collection(db, "quiz_results"), {
-                studentId: user.uid, studentName: studentName, courseId: courseId, courseTitle: c.title, score: score, total: total, createdAt: new Date()
-            });
+            // هل هناك نتيجة سابقة لهذا الطالب في هذا الكورس؟ (لو كان مسموح له بالإعادة، بنحدث النتيجة القديمة أو ننشئ جديدة)
+            const existingRes = window.studentQuizResults ? window.studentQuizResults[courseId] : null;
+
+            if (existingRes && existingRes.id) {
+                await updateDoc(doc(db, "quiz_results", existingRes.id), {
+                    score: score, total: total, canRetake: false, createdAt: new Date()
+                });
+            } else {
+                // لو لم توجد نتيجة سابقة أو للضمان، نبحث بالكويري ونحدث أو نضيف
+                const qRef = collection(db, "quiz_results");
+                const qSnap = await getDocs(query(qRef, where("studentId", "==", user.uid), where("courseId", "==", courseId)));
+                if (!qSnap.empty) {
+                    qSnap.forEach(async (d) => {
+                        await updateDoc(doc(db, "quiz_results", d.id), { score: score, total: total, canRetake: false, createdAt: new Date() });
+                    });
+                } else {
+                    await addDoc(collection(db, "quiz_results"), {
+                        studentId: user.uid, studentName: studentName, courseId: courseId, courseTitle: c.title, score: score, total: total, canRetake: false, createdAt: new Date()
+                    });
+                }
+            }
 
             document.getElementById('dynamic-area').innerHTML = `
                 <div class="max-w-md mx-auto mt-20 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl space-y-6">
