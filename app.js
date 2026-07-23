@@ -1,10 +1,7 @@
-// استيراد الإعدادات من ملف الفايربيس
 import { auth, db } from './firebase.js';
 
-// عنصر التطبيق الأساسي في HTML
 const appDiv = document.getElementById('app');
 
-// دالة عرض واجهة الطالب الرئيسية
 function renderStudentDashboard() {
   appDiv.innerHTML = `
     <div class="min-h-screen bg-slate-950 text-slate-100 flex">
@@ -98,5 +95,4 @@ function renderStudentDashboard() {
   `;
 }
 
-// تشغيل الواجهة عند فتح الموقع
 renderStudentDashboard();
