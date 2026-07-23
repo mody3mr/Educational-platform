@@ -16,7 +16,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-sky-500 selection:text-slate-950">
 
-    <!-- نافذة التنبيهات مع Z-Index عالي جداً -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -44,42 +43,23 @@
         </div>
     </div>
 
-    <!-- نافذة إعدادات الطالب -->
+    <!-- نافذة الإعدادات -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-gear text-sky-400 ml-2"></i>الإعدادات الشخصية</h3>
-            <p class="text-slate-400 text-xs mb-4">تعديل بياناتك سيتم إرساله للمعلم للموافقة عليه أولاً.</p>
-            <form id="settings-form" class="space-y-3">
-                <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1">الاسم الرباعي</label>
-                    <input type="text" id="set-fullName" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
-                </div>
+            <form id="settings-form" class="space-y-3 mt-4">
+                <input type="text" id="set-fullName" required placeholder="الاسم الرباعي" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
                 <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">هاتف الطالب</label>
-                        <input type="tel" id="set-studentPhone" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">هاتف الأب</label>
-                        <input type="tel" id="set-fatherPhone" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">هاتف الأم</label>
-                        <input type="tel" id="set-motherPhone" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
-                    </div>
+                    <input type="tel" id="set-studentPhone" required placeholder="هاتف الطالب" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
+                    <input type="tel" id="set-fatherPhone" required placeholder="هاتف الأب" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
+                    <input type="tel" id="set-motherPhone" required placeholder="هاتف الأم" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">المدرسة</label>
-                        <input type="text" id="set-school" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">المحافظة</label>
-                        <input type="text" id="set-governorate" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
-                    </div>
+                    <input type="text" id="set-school" required placeholder="المدرسة" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
+                    <input type="text" id="set-governorate" required placeholder="المحافظة" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
                 </div>
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition text-sm">إرسال طلب التعديل للإدارة</button>
+                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition text-sm">إرسال طلب التعديل</button>
                     <button type="button" onclick="closeSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-3 rounded-xl transition text-sm">إلغاء</button>
                 </div>
             </form>
@@ -90,10 +70,9 @@
     <div id="notifications-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
-                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>التنبيهات والإشعارات</h3>
+                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>التنبيهات</h3>
                 <button onclick="closeNotificationsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-slate-400 text-xs mb-3">اضغط على أي إشعار لتسجيله كمقروء وإطفاء التنبيه:</p>
             <div id="notifications-list" class="space-y-3">
                 <p class="text-slate-400 text-xs text-center py-4">لا توجد تنبيهات جديدة.</p>
             </div>
@@ -104,7 +83,7 @@
         <div class="flex items-center justify-center min-h-screen">
             <div class="flex flex-col items-center gap-4">
                 <div class="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin"></div>
-                <p class="text-slate-400 font-medium">جاري تهيئة المنصة الآمنة...</p>
+                <p class="text-slate-400 font-medium">جاري تهيئة المنصة...</p>
             </div>
         </div>
     </div>
@@ -112,7 +91,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, updateDoc, arrayUnion, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, updateDoc, arrayUnion, query, where, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
@@ -127,14 +106,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appDiv = document.getElementById('app');
-
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.key === 'PrintScreen' || (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
-                e.preventDefault();
-                showModal("تنبيه أمني", "عذراً، عمليات التصوير أو النسخ أو فحص الشاشة محظورة.", "rose");
-            }
-        });
 
         window.showModal = function(title, text, type = "sky") {
             document.getElementById('modal-title').innerText = title;
@@ -169,7 +140,7 @@
         document.getElementById('submit-code-btn').addEventListener('click', () => {
             const code = document.getElementById('activation-code-input').value.trim();
             if (!code) { showModal("تنبيه", "الرجاء إدخال الكود!", "rose"); return; }
-            closeActivationModal(); // إغلاق نافذة الكود فوراً لتظهر رسالة الخطأ واضحة بالمقدمة
+            closeActivationModal();
             verifyAndUnlockCode(code, currentActiveCourseId, currentUserId);
         });
 
@@ -180,7 +151,7 @@
                         const userData = userSnap.data();
                         if(userData.deviceBlocked) {
                             signOut(auth);
-                            showModal("جهاز محظور أمنياً", "عذراً، تم حظر هذا الجهاز من قِبل إدارة المنصة.", "rose");
+                            showModal("جهاز محظور أمنياً", "عذراً، تم حظر هذا الجهاز من قِبل الإدارة.", "rose");
                             return;
                         }
                         renderDashboard(user, userData);
@@ -197,14 +168,11 @@
             appDiv.innerHTML = `
                 <div class="min-h-screen flex items-center justify-center p-6">
                     <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
-                        <div class="text-center mb-6">
-                            <h1 class="text-2xl font-black text-white">تسجيل الدخول للمنصة</h1>
-                            <p class="text-slate-400 text-sm mt-1">أدخل بريدك وكلمة المرور للمتابعة</p>
-                        </div>
+                        <h2 class="text-2xl font-black text-white text-center mb-6">تسجيل الدخول للمنصة</h2>
                         <form id="auth-form" class="space-y-4">
                             <input type="email" id="email" required placeholder="البريد الإلكتروني" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
                             <input type="password" id="password" required placeholder="كلمة المرور" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
-                            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3 rounded-xl transition">دخول / إنشاء حساب</button>
+                            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3 rounded-xl transition">دخول / تسجيـل</button>
                         </form>
                     </div>
                 </div>
@@ -246,33 +214,23 @@
                     </div>
                 </div>
             `;
-
             document.getElementById('profile-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const studentPhone = document.getElementById('studentPhone').value.trim();
                 const nationalId = document.getElementById('nationalId').value.trim();
-
                 const usersRef = collection(db, "users");
                 if (!(await getDocs(query(usersRef, where("studentPhone", "==", studentPhone)))).empty || !(await getDocs(query(usersRef, where("nationalId", "==", nationalId)))).empty) {
-                    showModal("تنبيه تكرار", "رقم الهاتف أو الرقم القومي مُسجل مسبقاً بحساب آخر!", "rose");
+                    showModal("تنبيه تكرار", "رقم الهاتف أو الرقم القومي مسجل مسبقاً!", "rose");
                     return;
                 }
-
-                const data = {
+                await setDoc(doc(db, "users", user.uid), {
                     fullName: document.getElementById('fullName').value,
-                    studentPhone: studentPhone,
-                    fatherPhone: document.getElementById('fatherPhone').value,
-                    motherPhone: document.getElementById('motherPhone').value,
-                    nationalId: nationalId,
-                    school: document.getElementById('school').value,
-                    governorate: document.getElementById('governorate').value,
+                    studentPhone, fatherPhone: document.getElementById('fatherPhone').value,
+                    motherPhone: document.getElementById('motherPhone').value, nationalId,
+                    school: document.getElementById('school').value, governorate: document.getElementById('governorate').value,
                     academicYear: document.getElementById('academicYear').value,
-                    unlockedCourses: [],
-                    readNotifications: [],
-                    deviceBlocked: false
-                };
-
-                await setDoc(doc(db, "users", user.uid), data);
+                    unlockedCourses: [], readNotifications: [], deviceBlocked: false
+                });
             });
         }
 
@@ -293,12 +251,6 @@
                             <nav class="space-y-2">
                                 <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold bg-sky-500 text-slate-950">
                                     <i class="fa-solid fa-play-circle"></i> كورساتي المفعلة
-                                </a>
-                                <a href="#" onclick="showModal('الاختبارات', 'قسم الاختبارات والواجبات قادم قريباً!', 'sky')" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 transition">
-                                    <i class="fa-solid fa-clipboard-question"></i> الاختبارات والواجبات
-                                </a>
-                                <a href="#" onclick="showModal('الملفات الدراسية', 'قسم الملفات والملخصات الدراسية قريباً!', 'sky')" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 transition">
-                                    <i class="fa-solid fa-file-pdf"></i> الملفات الدراسية
                                 </a>
                             </nav>
                         </div>
@@ -350,7 +302,6 @@
             const dropdown = document.getElementById('dropdown-menu');
             menuBtn.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('hidden'); });
             window.addEventListener('click', () => dropdown.classList.add('hidden'));
-
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
             onSnapshot(collection(db, "courses"), (coursesSnap) => {
@@ -376,20 +327,16 @@
             e.preventDefault();
             const user = auth.currentUser;
             if (!user) return;
-
             await setDoc(doc(collection(db, "profile_requests")), {
-                userId: user.uid,
-                currentName: document.getElementById('set-fullName').value,
+                userId: user.uid, currentName: document.getElementById('set-fullName').value,
                 newFullName: document.getElementById('set-fullName').value,
                 newStudentPhone: document.getElementById('set-studentPhone').value,
                 newFatherPhone: document.getElementById('set-fatherPhone').value,
                 newMotherPhone: document.getElementById('set-motherPhone').value,
                 newSchool: document.getElementById('set-school').value,
                 newGovernorate: document.getElementById('set-governorate').value,
-                status: 'pending',
-                createdAt: new Date()
+                status: 'pending', createdAt: new Date()
             });
-
             closeSettingsModal();
             showModal("تم الإرسال", "تم إرسال طلب تعديل بياناتك للمعلم للموافقة عليه.");
         });
@@ -407,7 +354,6 @@
                 const n = docSnap.data();
                 const nId = docSnap.id;
                 const isRead = readList.includes(nId);
-
                 if (n.targetYear === 'all' || n.targetYear === userData.academicYear || n.targetUserId === userId) {
                     if (!isRead) unreadCount++;
                     notifHtml += `
@@ -446,6 +392,10 @@
                     const isCodeDisabled = courseCodeDisabledMap[courseId] || false;
 
                     if (c.academicYear === userData.academicYear && isActive) {
+                        // تخزين بيانات المحاضرة في متغير عام عشان زر المشاهدة والاختبار والملفات يقدروا يوصلولها
+                        window.allCoursesData = window.allCoursesData || {};
+                        window.allCoursesData[courseId] = c;
+
                         html += `
                             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between shadow-xl">
                                 <div>
@@ -459,11 +409,11 @@
                                             <i class="fa-solid fa-ban"></i> تم تعطيل كود المحاضرة
                                         </button>
                                     ` : `
-                                        <button onclick="window.watchLesson('${c.title}', '${c.videoUrl}', '${c.description}')" class="w-full bg-emerald-500 text-slate-950 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-400 transition">
-                                            <i class="fa-solid fa-play"></i> مشاهدة المحاضرة
+                                        <button onclick="window.openCourseView('${courseId}')" class="w-full bg-emerald-500 text-slate-950 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-400 transition">
+                                            <i class="fa-solid fa-play"></i> دخول المحاضرة (فيديو وملفات)
                                         </button>
                                     `) : `
-                                        <button onclick="window.openActivationModal('${courseId}', '${auth.currentUser.uid}')" class="w-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-slate-950 transition">
+                                        <button onclick="window.openActivationModal('${courseId}', '${userId}')" class="w-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-slate-950 transition">
                                             <i class="fa-solid fa-lock"></i> أدخل كود التفعيل
                                         </button>
                                     `}
@@ -481,9 +431,7 @@
         window.markNotificationRead = async function(notifId) {
             const user = auth.currentUser;
             if(!user) return;
-            await updateDoc(doc(db, "users", user.uid), {
-                readNotifications: arrayUnion(notifId)
-            });
+            await updateDoc(doc(db, "users", user.uid), { readNotifications: arrayUnion(notifId) });
         }
 
         async function verifyAndUnlockCode(code, courseId, userId) {
@@ -516,20 +464,161 @@
             showModal("تم التفعيل بنجاح!", "مبروك! تم فتح المحاضرة لك بنجاح.");
         }
 
-        window.watchLesson = function(title, videoUrl, desc) {
-            let videoId = videoUrl.includes('v=') ? videoUrl.split('v=')[1]?.split('&')[0] : videoUrl.split('/').pop();
+        // عرض المحاضرة (فيديو + ملفات PDF + زر الاختبار)
+        window.openCourseView = function(courseId) {
+            const c = window.allCoursesData[courseId];
+            if(!c) return;
+
+            let videoId = c.videoUrl.includes('v=') ? c.videoUrl.split('v=')[1]?.split('&')[0] : c.videoUrl.split('/').pop();
+            
+            let filesHtml = '';
+            if (c.files && c.files.length > 0) {
+                c.files.forEach(f => {
+                    filesHtml += `
+                        <a href="${f.url}" target="_blank" class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-2xl hover:border-rose-500 transition">
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-file-pdf text-rose-500 text-xl"></i>
+                                <span class="font-bold text-sm text-white">${f.title}</span>
+                            </div>
+                            <span class="bg-rose-500/10 text-rose-400 text-xs px-3 py-1.5 rounded-xl font-bold">تحميل / تصفح</span>
+                        </a>
+                    `;
+                });
+            } else {
+                filesHtml = `<p class="text-slate-500 text-xs">لا توجد ملفات PDF مرفقة لهذه المحاضرة.</p>`;
+            }
+
+            let quizBtnHtml = '';
+            if (c.quiz && c.quiz.length > 0) {
+                quizBtnHtml = `
+                    <button onclick="window.startQuiz('${courseId}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-4 rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                        <i class="fa-solid fa-clipboard-question"></i> بدء امتحان هذه المحاضرة (${c.quiz.length} أسئلة)
+                    </button>
+                `;
+            } else {
+                quizBtnHtml = `<p class="text-slate-500 text-xs text-center">لا يوجد امتحان مضاف لهذه المحاضرة حالياً.</p>`;
+            }
+
             document.getElementById('dynamic-area').innerHTML = `
                 <button onclick="location.reload()" class="mb-6 flex items-center gap-2 text-sky-400 font-bold transition hover:text-sky-300">
                     <i class="fa-solid fa-arrow-right"></i> العودة لقائمة المحاضرات
                 </button>
-                <div class="w-full aspect-video bg-black rounded-3xl overflow-hidden border border-slate-800 shadow-2xl mb-6 relative">
-                    <iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
-                    <h2 class="text-2xl font-black text-white">${title}</h2>
-                    <p class="text-slate-300 mt-3 leading-relaxed">${desc}</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- عمود الفيديو والوصف -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="w-full aspect-video bg-black rounded-3xl overflow-hidden border border-slate-800 shadow-2xl relative">
+                            <iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                            <h2 class="text-2xl font-black text-white">${c.title}</h2>
+                            <p class="text-slate-300 mt-3 leading-relaxed">${c.description}</p>
+                        </div>
+                    </div>
+
+                    <!-- عمود الملفات والاختبار -->
+                    <div class="space-y-6">
+                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-folder-open text-rose-400 ml-2"></i>الملفات والملازم الدراسية</h3>
+                            <div class="space-y-2">${filesHtml}</div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-award text-indigo-400 ml-2"></i>اختبار المحاضرة</h3>
+                            ${quizBtnHtml}
+                        </div>
+                    </div>
                 </div>
             `;
+        }
+
+        // تشغيل نظام الاختبار التفاعلي للطالب
+        window.startQuiz = function(courseId) {
+            const c = window.allCoursesData[courseId];
+            if(!c || !c.quiz) return;
+
+            let questionsHtml = '';
+            c.quiz.forEach((q, qIndex) => {
+                let optionsHtml = '';
+                q.options.forEach((opt, optIndex) => {
+                    optionsHtml += `
+                        <label class="flex items-center gap-3 bg-slate-950 border border-slate-800 p-3 rounded-xl cursor-pointer hover:border-indigo-500 transition">
+                            <input type="radio" name="question_${qIndex}" value="${optIndex}" class="accent-indigo-500 w-4 h-4" />
+                            <span class="text-sm text-white">${opt}</span>
+                        </label>
+                    `;
+                });
+
+                questionsHtml += `
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
+                        <h4 class="font-bold text-white text-sm">س ${qIndex + 1}: ${q.question}</h4>
+                        <div class="space-y-2">${optionsHtml}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('dynamic-area').innerHTML = `
+                <button onclick="window.openCourseView('${courseId}')" class="mb-6 flex items-center gap-2 text-sky-400 font-bold transition hover:text-sky-300">
+                    <i class="fa-solid fa-arrow-right"></i> العودة للمحاضرة
+                </button>
+                
+                <div class="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
+                    <div class="text-center pb-4 border-b border-slate-800">
+                        <h2 class="text-2xl font-black text-white">اختبار محاضرة: ${c.title}</h2>
+                        <p class="text-slate-400 text-xs mt-1">أجب عن الأسئلة التالية بعناية، ثم اضغط إرسال لمعرفة نتيجتك.</p>
+                    </div>
+
+                    <form id="quiz-submit-form" class="space-y-6">
+                        ${questionsHtml}
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-4 rounded-2xl transition shadow-lg shadow-emerald-600/20">
+                            إرسال الإجابات وعرض النتيجة الفورية
+                        </button>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('quiz-submit-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                let score = 0;
+                const total = c.quiz.length;
+
+                c.quiz.forEach((q, qIndex) => {
+                    const selected = document.querySelector(`input[name="question_${qIndex}"]:checked`);
+                    if (selected && parseInt(selected.value) === q.correct) {
+                        score++;
+                    }
+                });
+
+                // حفظ الدرجة في قاعدة البيانات
+                const user = auth.currentUser;
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                const studentName = userDoc.exists() ? userDoc.data().fullName : "طالب";
+
+                await addDoc(collection(db, "quiz_results"), {
+                    studentId: user.uid,
+                    studentName: studentName,
+                    courseId: courseId,
+                    courseTitle: c.title,
+                    score: score,
+                    total: total,
+                    createdAt: new Date()
+                });
+
+                // عرض النتيجة الفورية للطالب
+                document.getElementById('dynamic-area').innerHTML = `
+                    <div class="max-w-md mx-auto mt-20 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl space-y-6">
+                        <div class="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-3xl flex items-center justify-center mx-auto text-4xl">
+                            <i class="fa-solid fa-award"></i>
+                        </div>
+                        <h2 class="text-2xl font-black text-white">تم إرسال إجاباتك بنجاح!</h2>
+                        <p class="text-slate-400 text-sm">لقد حصلت على درجة:</p>
+                        <div class="text-5xl font-black text-amber-400 font-mono">${score} / ${total}</div>
+                        <button onclick="window.openCourseView('${courseId}')" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3.5 rounded-xl transition">
+                            العودة للمحاضرة
+                        </button>
+                    </div>
+                `;
+            });
         }
     </script>
 </body>
