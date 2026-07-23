@@ -4,12 +4,12 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
+  authDomain: "educational-platform-f5e7e.firebaseapp.com",
+  projectId: "educational-platform-f5e7e",
+  storageBucket: "educational-platform-f5e7e.firebasestorage.app",
+  messagingSenderId: "284103839814",
+  appId: "1:284103839814:web:9b6abd761a585c46f03a47"
 };
 
 const app = initializeApp(firebaseConfig);
