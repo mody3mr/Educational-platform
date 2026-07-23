@@ -3,39 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة الطالب التعليمية</title>
+    <title>منصة المتفوقين التعليمية</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Cairo Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Cairo', sans-serif; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-sky-500 selection:text-slate-950">
 
     <!-- عنصر التطبيق الرئيسي -->
     <div id="app">
-        <div class="flex items-center justify-center min-h-screen text-slate-400">
-            جاري تحميل المنصة...
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="flex flex-col items-center gap-4">
+                <div class="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin"></div>
+                <p class="text-slate-400 font-medium">جاري تحميل المنصة الاحترافية...</p>
+            </div>
         </div>
     </div>
 
-    <!-- جافاسكريبت فايربيس والمنطق بالكامل -->
+    <!-- كود المنطق والاتصال بـ Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // بيانات مشروعك في فايربيس (تأكد من وضع بياناتك الصحيحة هنا)
+        // استبدل ببيانات مشروعك الحقيقية
         const firebaseConfig = {
-        apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
-        authDomain: "educational-platform-f5e7e.firebaseapp.com",
-        projectId: "educational-platform-f5e7e",
-        storageBucket: "educational-platform-f5e7e.firebasestorage.app",
-        messagingSenderId: "284103839814",
-        appId: "1:284103839814:web:9b6abd761a585c46f03a47"
-};
+            apiKey: "حط_الـ_API_Key_هنا",
+            authDomain: "اسم_مشروعك.firebaseapp.com",
+            projectId: "اسم_مشروعك",
+            storageBucket: "اسم_مشروعك.appspot.com",
+            messagingSenderId: "رقم_المرسل",
+            appId: "رقم_الـ_App_Id"
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -43,7 +52,7 @@
 
         const appDiv = document.getElementById('app');
 
-        // مراقبة حالة المستخدم (هل هو مسجل دخول ولا لأ؟)
+        // مراقبة حالة المصادقة
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 renderStudentDashboard(user);
@@ -52,36 +61,51 @@
             }
         });
 
-        // 1. واجهة تسجيل الدخول
+        // 1. تصميم شاشة تسجيل الدخول الاحترافية
         function renderLoginView() {
             appDiv.innerHTML = `
-                <div class="min-h-screen flex items-center justify-center p-4">
-                    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                <div class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+                    <!-- خلفية مضيئة متطورة -->
+                    <div class="absolute -top-40 -right-40 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-8 md:p-10 shadow-2xl relative z-10">
                         <div class="text-center mb-8">
-                            <div class="w-16 h-16 bg-sky-500/10 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl border border-sky-500/20">
+                            <div class="w-16 h-16 bg-gradient-to-tr from-sky-500 to-blue-600 text-slate-950 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg shadow-sky-500/20">
                                 <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                            <h1 class="text-2xl font-bold text-white">تسجيل دخول الطالب</h1>
-                            <p class="text-slate-400 text-sm mt-2">ادخل بيانات حسابك لمتابعة دروسك</p>
+                            <h1 class="text-2xl font-black text-white tracking-wide">تسجيل دخول الطالب</h1>
+                            <p class="text-slate-400 text-sm mt-2">أدخل بريدك الإلكتروني وكلمة المرور لمتابعة دروسك</p>
                         </div>
 
                         <form id="login-form" class="space-y-5">
                             <div>
-                                <label class="block text-sm font-medium text-slate-300 mb-2">البريد الإلكتروني</label>
-                                <input type="email" id="email" required placeholder="student@example.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500 transition" />
+                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">البريد الإلكتروني</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500">
+                                        <i class="fa-solid fa-envelope"></i>
+                                    </span>
+                                    <input type="email" id="email" required placeholder="name@example.com" class="w-full bg-slate-950/60 border border-slate-800 rounded-2xl pr-11 pl-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition text-sm" />
+                                </div>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-slate-300 mb-2">كلمة المرور</label>
-                                <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500 transition" />
+                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">كلمة المرور</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500">
+                                        <i class="fa-solid fa-lock"></i>
+                                    </span>
+                                    <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950/60 border border-slate-800 rounded-2xl pr-11 pl-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition text-sm" />
+                                </div>
                             </div>
 
-                            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3.5 rounded-xl transition shadow-lg shadow-sky-500/10 flex items-center justify-center gap-2">
-                                <span>دخول للمنصة</span>
+                            <button type="submit" class="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-slate-950 font-extrabold py-4 rounded-2xl transition shadow-xl shadow-sky-500/20 flex items-center justify-center gap-2 text-base">
+                                <span>دخول المنصة</span>
+                                <i class="fa-solid fa-arrow-left"></i>
                             </button>
                         </form>
 
-                        <div id="error-msg" class="text-red-400 text-sm mt-4 text-center font-medium"></div>
+                        <div id="error-msg" class="text-rose-400 text-xs font-bold mt-4 text-center"></div>
                     </div>
                 </div>
             `;
@@ -100,60 +124,80 @@
             });
         }
 
-        // 2. لوحة تحكم الطالب وجلب الكورسات
+        // 2. تصميم لوحة التحكم الفاخرة للطالب
         function renderStudentDashboard(user) {
             appDiv.innerHTML = `
-                <div class="min-h-screen flex">
-                    <!-- القائمة الجانبية -->
-                    <aside class="w-72 bg-slate-900 border-l border-slate-800 p-6 hidden md:flex flex-col justify-between">
+                <div class="min-h-screen flex flex-col md:flex-row">
+                    <!-- القائمة الجانبية الاحترافية -->
+                    <aside class="w-full md:w-72 bg-slate-900/50 backdrop-blur-xl border-l border-slate-800/80 p-6 flex flex-col justify-between hidden md:flex">
                         <div>
-                            <div class="flex items-center gap-3 mb-10">
-                                <div class="bg-sky-500 text-slate-950 font-bold p-2.5 rounded-xl">
-                                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                            <div class="flex items-center gap-3 mb-10 px-2">
+                                <div class="w-11 h-11 bg-gradient-to-tr from-sky-500 to-blue-600 text-slate-950 rounded-2xl flex items-center justify-center font-black shadow-lg shadow-sky-500/20">
+                                    <i class="fa-solid fa-graduation-cap text-lg"></i>
                                 </div>
-                                <h1 class="text-xl font-bold">بوابة الطالب</h1>
+                                <div>
+                                    <h1 class="font-extrabold text-white text-base">منصة المتفوقين</h1>
+                                    <span class="text-xs text-sky-400 font-semibold">بوابة الطالب الذكية</span>
+                                </div>
                             </div>
-                            <nav class="space-y-2">
-                                <button class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium bg-sky-500 text-slate-950 font-bold shadow-lg shadow-sky-500/20">
-                                    <i class="fa-solid fa-play-circle text-lg"></i>
+
+                            <nav class="space-y-1.5">
+                                <a href="#" class="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 transition">
+                                    <i class="fa-solid fa-compass text-lg"></i>
                                     <span>كورساتي المفعلة</span>
-                                </button>
+                                </a>
                             </nav>
                         </div>
-                        <div class="border-t border-slate-800 pt-4">
-                            <button id="logout-btn" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 text-red-400 transition font-medium">
-                                <i class="fa-solid fa-right-from-bracket"></i>
+
+                        <div class="pt-4 border-t border-slate-800/80">
+                            <button id="logout-btn" class="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl hover:bg-rose-500/10 text-rose-400 font-semibold transition group">
+                                <i class="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
                                 <span>تسجيل الخروج</span>
                             </button>
                         </div>
                     </aside>
 
-                    <!-- محتوى الصفحة -->
-                    <main class="flex-1 p-6 md:p-10 overflow-y-auto">
-                        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 pb-6 border-b border-slate-800">
+                    <!-- المحتوى الرئيسي -->
+                    <main class="flex-1 p-6 md:p-12 overflow-y-auto">
+                        <!-- هيدر الصفحة الفخم -->
+                        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 pb-8 border-b border-slate-800/80">
                             <div>
-                                <h2 class="text-3xl font-bold text-white">أهلاً بك يا بطل! 👋</h2>
-                                <p class="text-slate-400 mt-1">الحساب: <span class="text-sky-400">${user.email}</span></p>
+                                <h2 class="text-3xl md:text-4xl font-black text-white tracking-tight">أهلاً بك يا بطل! 👋</h2>
+                                <p class="text-slate-400 text-sm mt-1.5">استمر في متابعة دروسك لتحقيق أعلى الدرجات.</p>
                             </div>
-                            <div class="md:hidden">
-                                <button id="logout-btn-mob" class="bg-red-500/10 text-red-400 px-4 py-2 rounded-xl text-sm font-bold">خروج</button>
+                            <div class="flex items-center gap-3 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl shadow-inner">
+                                <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-black text-sm">
+                                    ${user.email.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-400 font-medium">حساب مسجل</div>
+                                    <div class="text-xs font-bold text-white truncate max-w-[180px]">${user.email}</div>
+                                </div>
+                                <button id="logout-btn-mob" class="md:hidden mr-2 text-rose-400 p-1.5"><i class="fa-solid fa-power-off"></i></button>
                             </div>
                         </header>
 
+                        <!-- قسم عرض الكورسات -->
                         <div>
-                            <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <i class="fa-solid fa-book-open text-sky-400"></i>
-                                الكورسات المتاحة لك
-                            </h3>
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-xl font-extrabold text-white flex items-center gap-2.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse"></span>
+                                    المحاضرات والكورسات المتاحة
+                                </h3>
+                            </div>
+
                             <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <p class="text-slate-400">جاري تحميل المحاضرات...</p>
+                                <!-- كارت التحميل الوهمي -->
+                                <div class="bg-slate-900/50 border border-slate-800/80 rounded-3xl p-6 h-64 flex flex-col justify-center items-center gap-3 animate-pulse col-span-full">
+                                    <div class="w-8 h-8 rounded-full border-2 border-sky-500 border-t-transparent animate-spin"></div>
+                                    <p class="text-slate-400 text-sm">جاري جلب المحاضرات من الخادم...</p>
+                                </div>
                             </div>
                         </div>
                     </main>
                 </div>
             `;
 
-            // أزرار تسجيل الخروج
             const handleLogout = () => signOut(auth);
             document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
             document.getElementById('logout-btn-mob')?.addEventListener('click', handleLogout);
@@ -161,13 +205,21 @@
             loadCourses();
         }
 
-        // جلب الكورسات من فايربيس
+        // 3. دالة جلب الكورسات وعرضها في كروت فاخرة
         async function loadCourses() {
             const grid = document.getElementById('courses-grid');
             try {
                 const querySnapshot = await getDocs(collection(db, "courses"));
                 if (querySnapshot.empty) {
-                    grid.innerHTML = `<p class="text-slate-400 col-span-3">لا توجد كورسات متاحة حالياً.</p>`;
+                    grid.innerHTML = `
+                        <div class="col-span-full py-16 text-center bg-slate-900/40 border border-slate-800/80 rounded-3xl">
+                            <div class="w-16 h-16 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+                                <i class="fa-solid fa-box-open"></i>
+                            </div>
+                            <h4 class="text-lg font-bold text-white">لا توجد كورسات متاحة حالياً</h4>
+                            <p class="text-slate-400 text-sm mt-1">سيتم إضافة محاضرات جديدة قريباً من قبل المدرس.</p>
+                        </div>
+                    `;
                     return;
                 }
 
@@ -175,21 +227,36 @@
                 querySnapshot.forEach((doc) => {
                     const c = doc.data();
                     html += `
-                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl hover:border-sky-500/50 transition">
+                        <div class="group bg-slate-900/80 backdrop-blur-md border border-slate-800/80 rounded-3xl overflow-hidden hover:border-sky-500/50 transition-all duration-300 flex flex-col justify-between shadow-xl hover:shadow-2xl hover:shadow-sky-500/10 hover:-translate-y-1">
                             <div>
-                                <span class="text-xs bg-sky-500/10 text-sky-400 px-3 py-1 rounded-full font-bold">${c.subject || 'مادة دراسية'}</span>
-                                <h3 class="text-lg font-bold text-white mt-3">${c.title}</h3>
-                                <p class="text-slate-400 text-sm mt-2 leading-relaxed">${c.description}</p>
+                                <div class="h-44 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-sky-400 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-sky-500/5 group-hover:bg-sky-500/10 transition"></div>
+                                    <i class="fa-solid fa-play-circle text-5xl opacity-80 group-hover:scale-110 transition-transform duration-300"></i>
+                                    <span class="absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md text-xs font-bold text-sky-400 px-3 py-1 rounded-xl border border-slate-800">
+                                        ${c.subject || 'مادة دراسية'}
+                                    </span>
+                                </div>
+                                <div class="p-6">
+                                    <h3 class="text-lg font-extrabold text-white group-hover:text-sky-400 transition-colors">${c.title}</h3>
+                                    <p class="text-slate-400 text-sm mt-2.5 leading-relaxed line-clamp-2">${c.description || 'لا يوجد وصف متاح.'}</p>
+                                </div>
                             </div>
-                            <button class="mt-6 w-full bg-sky-500 text-slate-950 font-bold py-3 rounded-xl hover:bg-sky-400 transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/10">
-                                <i class="fa-solid fa-play"></i> مشاهدة المحاضرة
-                            </button>
+                            <div class="p-6 pt-0">
+                                <button onclick="alert('جاري فتح المحاضرة قريباً...')" class="w-full bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-slate-950 font-extrabold py-3.5 rounded-2xl transition-all duration-300 border border-sky-500/20 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-play text-xs"></i>
+                                    <span>مشاهدة المحاضرة</span>
+                                </button>
+                            </div>
                         </div>
                     `;
                 });
                 grid.innerHTML = html;
             } catch (err) {
-                grid.innerHTML = `<p class="text-red-400 col-span-3">حدث خطأ أثناء تحميل الكورسات.</p>`;
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center bg-rose-500/10 border border-rose-500/20 rounded-3xl">
+                        <p class="text-rose-400 font-bold">حدث خطأ أثناء تحميل الكورسات من قاعدة البيانات.</p>
+                    </div>
+                `;
             }
         }
     </script>
