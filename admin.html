@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم المعلم - نظام LMS المتكامل</title>
+    <title>لوحة تحكم المعلم - الإدارة المركزية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -42,6 +42,28 @@
                 <div class="flex gap-3">
                     <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition">حفظ التعديلات</button>
                     <button type="button" onclick="closeEditModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-5 py-3 rounded-xl transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة تعديل الإشعار -->
+    <div id="edit-notif-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>تعديل التنبيه</h3>
+            <form id="edit-notif-form" class="space-y-4">
+                <input type="hidden" id="edit-notif-id">
+                <input type="text" id="edit-notif-title" required placeholder="عنوان التنبيه" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                <select id="edit-notif-target" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
+                    <option value="all">جميع السنوات الدراسية</option>
+                    <option value="first">الصف الأول الثانوي فقط</option>
+                    <option value="second">الصف الثاني الثانوي فقط</option>
+                    <option value="third">الصف الثالث الثانوي فقط</option>
+                </select>
+                <textarea id="edit-notif-msg" required placeholder="نص التنبيه..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm h-20"></textarea>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition">حفظ التعديل</button>
+                    <button type="button" onclick="closeEditNotifModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-5 py-3 rounded-xl transition">إلغاء</button>
                 </div>
             </form>
         </div>
@@ -102,6 +124,7 @@
 
         window.closeModal = function() { document.getElementById('custom-modal').classList.add('hidden'); }
         window.closeEditModal = function() { document.getElementById('edit-modal').classList.add('hidden'); }
+        window.closeEditNotifModal = function() { document.getElementById('edit-notif-modal').classList.add('hidden'); }
 
         onAuthStateChanged(auth, (user) => {
             if (user) { renderAdminDashboard(user); } else { renderLogin(); }
@@ -126,7 +149,7 @@
             });
         }
 
-        async function renderAdminDashboard(user) {
+        function renderAdminDashboard(user) {
             appDiv.innerHTML = `
                 <div class="min-h-screen p-6 md:p-10 max-w-7xl mx-auto space-y-8">
                     <header class="flex justify-between items-center pb-6 border-b border-slate-800">
@@ -229,7 +252,41 @@
                         </div>
                     </div>
 
-                    <!-- نتائج اختبارات الطلاب (مع زر السماح بإعادة الامتحان) -->
+                    <!-- إدارة التنبيهات المنشورة -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bullhorn text-sky-400 ml-2"></i>التنبيهات المنشورة</h3>
+                            <div class="flex gap-3 w-full md:w-auto">
+                                <select id="filter-notif-target" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs flex-1 md:w-48">
+                                    <option value="all">كل الإشعارات</option>
+                                    <option value="all_years">جميع السنوات</option>
+                                    <option value="first">الصف الأول الثانوي</option>
+                                    <option value="second">الصف الثاني الثانوي</option>
+                                    <option value="third">الصف الثالث الثانوي</option>
+                                </select>
+                                <button onclick="window.deleteAllNotifications()" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition">
+                                    <i class="fa-solid fa-trash-can"></i> حذف الكل
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-sm text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">العنوان</th>
+                                        <th class="p-3">مستهدفون</th>
+                                        <th class="p-3">الرسالة</th>
+                                        <th class="p-3">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-notifications-body">
+                                    <tr><td colspan="4" class="p-4 text-center text-slate-500">جاري التحميل...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- نتائج اختبارات الطلاب -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-square-poll-vertical text-emerald-400 ml-2"></i>درجات ونتائج اختبارات الطلاب ومستوى التقدم</h3>
@@ -251,6 +308,25 @@
                                 </thead>
                                 <tbody id="quiz-results-body">
                                     <tr><td colspan="6" class="p-4 text-center text-slate-500">جاري التحميل...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- طلبات تعديل البيانات -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-pen text-amber-400 ml-2"></i>طلبات تعديل بيانات الطلاب المعلقة</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-sm text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">اسم الطالب الحالي</th>
+                                        <th class="p-3">البيانات الجديدة المطلوبة</th>
+                                        <th class="p-3">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="requests-table-body">
+                                    <tr><td colspan="3" class="p-4 text-center text-slate-500">جاري التحميل...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -441,130 +517,295 @@
                 } catch (err) { showModal("خطأ", "حدث خطأ: " + err.message, "rose"); }
             });
 
-            document.getElementById('filter-year').addEventListener('change', setupRealtimeListeners);
-            document.getElementById('filter-code-status').addEventListener('change', setupRealtimeListeners);
-            document.getElementById('filter-results-course').addEventListener('change', setupRealtimeListeners);
-            document.getElementById('student-search').addEventListener('input', setupRealtimeListeners);
+            document.getElementById('filter-year').addEventListener('change', setupAdminRealtimeData);
+            document.getElementById('filter-code-status').addEventListener('change', setupAdminRealtimeData);
+            document.getElementById('filter-notif-target').addEventListener('change', setupAdminRealtimeData);
+            document.getElementById('filter-results-course').addEventListener('change', setupAdminRealtimeData);
+            document.getElementById('student-search').addEventListener('input', setupAdminRealtimeData);
 
-            setupRealtimeListeners();
+            setupAdminRealtimeData();
         }
 
+        // استخدام State عام ومستقل لأدمن لضمان عدم حدوث أي تداخل
+        let adminCourses = [];
+        let adminCodes = [];
+        let adminUsers = [];
+        let adminNotifications = [];
+        let adminRequests = [];
+        let adminResults = [];
         let coursesMap = {};
 
-        function setupRealtimeListeners() {
-            onSnapshot(collection(db, "courses"), (coursesSnap) => {
-                const select = document.getElementById('codeCourseSelect');
-                const fileSelect = document.getElementById('fileCourseSelect');
-                const quizSelect = document.getElementById('quizCourseSelect');
-                const resultsCourseFilter = document.getElementById('filter-results-course');
-                const coursesGrid = document.getElementById('admin-courses-grid');
-                const yearFilter = document.getElementById('filter-year')?.value || 'all';
-                
-                let selectHtml = '<option value="">اختر المحاضرة</option>';
-                let fileSelectHtml = '<option value="">اختر المحاضرة</option>';
-                let quizSelectHtml = '<option value="">اختر المحاضرة</option>';
-                let resultsFilterHtml = '<option value="all">جميع المحاضرات</option>';
-                let coursesHtml = '';
-                coursesMap = {};
+        function setupAdminRealtimeData() {
+            onSnapshot(collection(db, "courses"), (snap) => {
+                adminCourses = [];
+                snap.forEach(d => adminCourses.push({ id: d.id, ...d.data() }));
+                renderAdminUI();
+            });
+            onSnapshot(collection(db, "activation_codes"), (snap) => {
+                adminCodes = [];
+                snap.forEach(d => adminCodes.push({ id: d.id, ...d.data() }));
+                renderAdminUI();
+            });
+            onSnapshot(collection(db, "users"), (snap) => {
+                adminUsers = [];
+                snap.forEach(d => adminUsers.push({ id: d.id, ...d.data() }));
+                renderAdminUI();
+            });
+            onSnapshot(collection(db, "notifications"), (snap) => {
+                adminNotifications = [];
+                snap.forEach(d => adminNotifications.push({ id: d.id, ...d.data() }));
+                renderAdminUI();
+            });
+            onSnapshot(collection(db, "profile_requests"), (snap) => {
+                adminRequests = [];
+                snap.forEach(d => adminRequests.push({ id: d.id, ...d.data() }));
+                renderAdminUI();
+            });
+            onSnapshot(collection(db, "quiz_results"), (snap) => {
+                adminResults = [];
+                snap.forEach(d => adminResults.push({ id: d.id, ...d.data() }));
+                renderAdminUI();
+            });
+        }
 
-                coursesSnap.forEach(docSnap => {
-                    const c = docSnap.data();
-                    const id = docSnap.id;
-                    const yearText = c.academicYear === 'third' ? 'الثالث الثانوي' : c.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي';
-                    coursesMap[id] = { title: c.title, year: yearText };
-                    const isActive = c.isActive !== false;
+        function renderAdminUI() {
+            // 1. تحديث خيارات المحاضرات والقوائم المنسدلة
+            const select = document.getElementById('codeCourseSelect');
+            const fileSelect = document.getElementById('fileCourseSelect');
+            const quizSelect = document.getElementById('quizCourseSelect');
+            const resultsCourseFilter = document.getElementById('filter-results-course');
+            const coursesGrid = document.getElementById('admin-courses-grid');
+            const yearFilter = document.getElementById('filter-year')?.value || 'all';
 
-                    selectHtml += `<option value="${id}">${c.title}</option>`;
-                    fileSelectHtml += `<option value="${id}">${c.title}</option>`;
-                    quizSelectHtml += `<option value="${id}">${c.title}</option>`;
-                    resultsFilterHtml += `<option value="${id}">${c.title}</option>`;
+            if (!coursesGrid) return;
 
-                    if (yearFilter === 'all' || c.academicYear === yearFilter) {
-                        coursesHtml += `
-                            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3">
-                                <div>
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
-                                        <span class="text-xs px-2 py-0.5 rounded-md font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${isActive ? 'نشطة' : 'متوقفة'}</span>
-                                    </div>
-                                    <h4 class="text-base font-bold text-white">${c.title}</h4>
-                                    <p class="text-slate-400 text-xs mt-1">السنة: ${yearText} | الوقت: ${c.quizDuration || 10} د</p>
+            let selectHtml = '<option value="">اختر المحاضرة</option>';
+            let fileSelectHtml = '<option value="">اختر المحاضرة</option>';
+            let quizSelectHtml = '<option value="">اختر المحاضرة</option>';
+            let resultsFilterHtml = '<option value="all">جميع المحاضرات</option>';
+            let coursesHtml = '';
+            coursesMap = {};
+
+            adminCourses.forEach(c => {
+                const yearText = c.academicYear === 'third' ? 'الثالث الثانوي' : c.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي';
+                coursesMap[c.id] = { title: c.title, year: yearText };
+                const isActive = c.isActive !== false;
+
+                selectHtml += `<option value="${c.id}">${c.title}</option>`;
+                fileSelectHtml += `<option value="${c.id}">${c.title}</option>`;
+                quizSelectHtml += `<option value="${c.id}">${c.title}</option>`;
+                resultsFilterHtml += `<option value="${c.id}">${c.title}</option>`;
+
+                if (yearFilter === 'all' || c.academicYear === yearFilter) {
+                    let filesListHtml = (c.files || []).map(f => `
+                        <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
+                            <span class="truncate max-w-[150px] text-rose-300">${f.title}</span>
+                            <button onclick="window.deleteCourseFile('${c.id}', '${f.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد ملفات</span>';
+
+                    let quizListHtml = (c.quiz || []).map((q, qIdx) => `
+                        <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
+                            <span class="truncate max-w-[150px] text-indigo-300">س${qIdx+1}: ${q.question}</span>
+                            <button onclick="window.deleteQuizQuestion('${c.id}', '${q.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد أسئلة</span>';
+
+                    coursesHtml += `
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
+                                    <span class="text-xs px-2 py-0.5 rounded-md font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${isActive ? 'نشطة' : 'متوقفة'}</span>
                                 </div>
-                                <div class="grid grid-cols-3 gap-2 pt-2">
-                                    <button onclick="window.openEditModal('${id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold">تعديل</button>
-                                    <button onclick="window.toggleCourseStatus('${id}', ${isActive})" class="bg-slate-800 text-xs py-2 rounded-xl font-bold">${isActive ? 'إيقاف' : 'تشغيل'}</button>
-                                    <button onclick="window.deleteCourse('${id}')" class="bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold">حذف</button>
-                                </div>
+                                <h4 class="text-base font-bold text-white">${c.title}</h4>
+                                <p class="text-slate-400 text-xs mt-1">السنة: ${yearText} | الوقت: ${c.quizDuration || 10} د</p>
+                                <div class="mt-3 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الملفات:</p><div class="max-h-24 overflow-y-auto">${filesListHtml}</div></div>
+                                <div class="mt-2 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الامتحان:</p><div class="max-h-24 overflow-y-auto">${quizListHtml}</div></div>
                             </div>
-                        `;
-                    }
-                });
-                if(select) select.innerHTML = selectHtml;
-                if(fileSelect) fileSelect.innerHTML = fileSelectHtml;
-                if(quizSelect) quizSelect.innerHTML = quizSelectHtml;
-                if(resultsCourseFilter && resultsCourseFilter.options.length <= 1) resultsCourseFilter.innerHTML = resultsFilterHtml;
-                if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات مطابقة</p>';
-                
-                loadCodesAndStudentsAndResults();
+                            <div class="grid grid-cols-3 gap-2 pt-2">
+                                <button onclick="window.openEditModal('${c.id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold">تعديل</button>
+                                <button onclick="window.toggleCourseStatus('${c.id}', ${isActive})" class="bg-slate-800 text-xs py-2 rounded-xl font-bold">${isActive ? 'إيقاف' : 'تشغيل'}</button>
+                                <button onclick="window.deleteCourse('${c.id}')" class="bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold">حذف</button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            if(select) select.innerHTML = selectHtml;
+            if(fileSelect) fileSelect.innerHTML = fileSelectHtml;
+            if(quizSelect) quizSelect.innerHTML = quizSelectHtml;
+            if(resultsCourseFilter && resultsCourseFilter.options.length <= 1) resultsCourseFilter.innerHTML = resultsFilterHtml;
+            if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات مطابقة</p>';
+
+            // 2. تحديث جدول طلبات التعديل
+            const reqTbody = document.getElementById('requests-table-body');
+            let reqHtml = '';
+            adminRequests.forEach(req => {
+                if (req.status === 'pending') {
+                    reqHtml += `
+                        <tr class="border-b border-slate-800/60">
+                            <td class="p-3 font-bold text-white">${req.currentName}</td>
+                            <td class="p-3 text-xs space-y-1">الاسم: <span class="text-sky-400">${req.newFullName}</span><br>هاتف: <span class="text-sky-400">${req.newStudentPhone}</span><br>مدرسة: <span class="text-sky-400">${req.newSchool} / ${req.newGovernorate}</span></td>
+                            <td class="p-3 flex gap-2">
+                                <button onclick="window.approveRequest('${req.id}', '${req.userId}', '${req.newFullName}', '${req.newStudentPhone}', '${req.newFatherPhone}', '${req.newMotherPhone}', '${req.newSchool}', '${req.newGovernorate}')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-xs font-bold transition text-white">موافقة</button>
+                                <button onclick="window.rejectRequest('${req.id}', '${req.userId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold transition">رفض</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(reqTbody) reqTbody.innerHTML = reqHtml || '<tr><td colspan="3" class="p-4 text-center text-slate-500">لا توجد طلبات معلقة</td></tr>';
+
+            // 3. خريطة الطلاب للربط السريع
+            let studentsMap = {};
+            adminUsers.forEach(st => { studentsMap[st.id] = `${st.fullName || 'بدون اسم'} / ${st.studentPhone || '-'}`; });
+
+            // 4. جدول الطلاب والبحث
+            const studentsTbody = document.getElementById('students-table-body');
+            const searchTerm = document.getElementById('student-search')?.value.toLowerCase() || '';
+            let studentsHtml = '';
+            adminUsers.forEach(st => {
+                const fullName = (st.fullName || '').toLowerCase();
+                const phone = (st.studentPhone || '').toLowerCase();
+                const nationalId = (st.nationalId || '').toLowerCase();
+                if (searchTerm === '' || fullName.includes(searchTerm) || phone.includes(searchTerm) || nationalId.includes(searchTerm)) {
+                    const isDeviceBlocked = st.deviceBlocked || false;
+                    studentsHtml += `
+                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                            <td class="p-3 font-bold text-white">${st.fullName}</td>
+                            <td class="p-3 text-xs">طالب: <span class="font-mono text-sky-400">${st.studentPhone || '-'}</span><br>أب: <span class="font-mono">${st.fatherPhone || '-'}</span></td>
+                            <td class="p-3 font-mono text-xs">${st.nationalId || '-'}</td>
+                            <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
+                            <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث' : st.academicYear === 'second' ? 'الثاني' : 'الأول'} الثانوي</td>
+                            <td class="p-3 flex items-center gap-2">
+                                ${isDeviceBlocked ? '<span class="text-rose-400 text-xs font-bold">محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">مسموح</span>'}
+                                <button onclick="window.toggleDeviceBlock('${st.id}', ${isDeviceBlocked})" class="bg-slate-800 text-xs px-3 py-1.5 rounded-lg font-bold transition">${isDeviceBlocked ? 'رفع الحظر' : 'حظر الجهاز'}</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مطابقة</td></tr>';
+
+            // 5. جدول الأكواد
+            const codesTbody = document.getElementById('codes-table-body');
+            const codeStatusFilter = document.getElementById('filter-code-status')?.value || 'all';
+            let codesHtml = '';
+            adminCodes.forEach(codeObj => {
+                const courseInfo = coursesMap[codeObj.courseId] || { title: 'محاضرة محذوفة', year: '-' };
+                const courseLabel = `${courseInfo.title} / ${courseInfo.year}`;
+                const isDisabled = codeObj.isDisabled || false;
+                const isUsed = codeObj.isUsed || false;
+                let matchesFilter = true;
+                if (codeStatusFilter === 'available' && (isUsed || isDisabled)) matchesFilter = false;
+                if (codeStatusFilter === 'used' && !isUsed) matchesFilter = false;
+                if (codeStatusFilter === 'disabled' && !isDisabled) matchesFilter = false;
+
+                if (matchesFilter) {
+                    const studentDetails = codeObj.usedBy ? (studentsMap[codeObj.usedBy] || codeObj.usedBy) : 'لا يوجد';
+                    codesHtml += `
+                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                            <td class="p-3 font-mono text-amber-400 font-bold">${codeObj.code}</td>
+                            <td class="p-3 text-xs text-sky-300 font-semibold">${courseLabel}</td>
+                            <td class="p-3">${isUsed ? '<span class="bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-lg text-xs font-bold">مستخدم</span>' : (isDisabled ? '<span class="bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-bold">معطل</span>' : '<span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-lg text-xs font-bold">متاح</span>')}</td>
+                            <td class="p-3 text-xs text-slate-300">${studentDetails}</td>
+                            <td class="p-3 flex gap-2">
+                                <button onclick="window.toggleCodeStatus('${codeObj.id}', ${isDisabled})" class="bg-slate-800 px-3 py-1 rounded-lg text-xs font-bold transition">${isDisabled ? 'تفعيل' : 'تعطيل'}</button>
+                                <button onclick="window.deleteCode('${codeObj.id}', '${codeObj.usedBy || ''}', '${codeObj.courseId || ''}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد أكواد مطابقة</td></tr>';
+
+            // 6. جدول التنبيهات المنشورة
+            const notifBody = document.getElementById('admin-notifications-body');
+            const notifFilter = document.getElementById('filter-notif-target')?.value || 'all';
+            let notifHtml = '';
+            adminNotifications.forEach(n => {
+                const targetText = n.targetYear === 'all' ? 'جميع السنوات' : (n.targetYear === 'third' ? 'الثالث الثانوي' : n.targetYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي');
+                let matchesNotifFilter = true;
+                if (notifFilter === 'all_years' && n.targetYear !== 'all') matchesNotifFilter = false;
+                if (notifFilter !== 'all' && notifFilter !== 'all_years' && n.targetYear !== notifFilter) matchesNotifFilter = false;
+
+                if (matchesNotifFilter) {
+                    notifHtml += `
+                        <tr class="border-b border-slate-800/60">
+                            <td class="p-3 font-bold text-white">${n.title}</td>
+                            <td class="p-3 text-xs text-sky-400">${targetText}</td>
+                            <td class="p-3 text-xs truncate max-w-xs">${n.message}</td>
+                            <td class="p-3 flex gap-2">
+                                <button onclick="window.openEditNotifModal('${n.id}', '${n.title}', '${n.targetYear}', '${n.message}')" class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-xs font-bold">تعديل</button>
+                                <button onclick="window.deleteNotification('${n.id}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(notifBody) notifBody.innerHTML = notifHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد تنبيهات</td></tr>';
+
+            // 7. جدول نتائج الامتحانات
+            const resultsBody = document.getElementById('quiz-results-body');
+            const courseFilterId = document.getElementById('filter-results-course')?.value || 'all';
+            let resHtml = '';
+            adminResults.forEach(r => {
+                const canRetake = r.canRetake || false;
+                if (courseFilterId === 'all' || r.courseId === courseFilterId) {
+                    const percentage = Math.round((r.score / r.total) * 100);
+                    let evaluation = percentage >= 85 ? 'ممتاز' : percentage >= 65 ? 'جيد جداً' : percentage >= 50 ? 'مقبول' : 'راسب';
+                    resHtml += `
+                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                            <td class="p-3 font-bold text-white">${r.studentName}</td>
+                            <td class="p-3 text-xs text-sky-400">${r.courseTitle}</td>
+                            <td class="p-3 font-mono font-bold text-amber-400">${r.score} / ${r.total} (${percentage}%)</td>
+                            <td class="p-3"><span class="text-xs px-2.5 py-1 rounded-lg border font-bold">${evaluation}</span></td>
+                            <td class="p-3"><button onclick="window.toggleQuizRetake('${r.id}', ${canRetake})" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${canRetake ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}">${canRetake ? 'مسموح بالإعادة' : 'السماح بالإعادة'}</button></td>
+                            <td class="p-3"><button onclick="window.deleteQuizResult('${r.id}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button></td>
+                        </tr>
+                    `;
+                }
+            });
+            if(resultsBody) resultsBody.innerHTML = resHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مسجلة</td></tr>';
+        }
+
+        // دوال الإدارة المرفوعة لـ window
+        window.deleteCourseFile = async function(courseId, fileId) {
+            showModal("تأكيد الحذف", "حذف هذا الملف؟", "rose", async () => {
+                const target = adminCourses.find(c => c.id === courseId);
+                if(target && target.files) {
+                    const newFiles = target.files.filter(f => f.id !== fileId);
+                    await updateDoc(doc(db, "courses", courseId), { files: newFiles });
+                }
             });
         }
 
-        function loadCodesAndStudentsAndResults() {
-            onSnapshot(collection(db, "users"), (usersSnap) => {
-                let studentsMap = {};
-                usersSnap.forEach(docSnap => {
-                    const st = docSnap.data();
-                    studentsMap[docSnap.id] = `${st.fullName || 'بدون اسم'} / ${st.studentPhone || '-'}`;
-                });
-
-                // الاستماع لنتائج الاختبارات مع إمكانية السماح بإعادة الامتحان (Toggle canRetake)
-                onSnapshot(collection(db, "quiz_results"), (resSnap) => {
-                    const resultsBody = document.getElementById('quiz-results-body');
-                    const courseFilterId = document.getElementById('filter-results-course')?.value || 'all';
-                    let resHtml = '';
-
-                    resSnap.forEach(docSnap => {
-                        const r = docSnap.data();
-                        const rId = docSnap.id;
-                        const canRetake = r.canRetake || false;
-
-                        if (courseFilterId === 'all' || r.courseId === courseFilterId) {
-                            const percentage = Math.round((r.score / r.total) * 100);
-                            let evaluation = percentage >= 85 ? 'ممتاز' : percentage >= 65 ? 'جيد جداً' : percentage >= 50 ? 'مقبول' : 'راسب';
-                            
-                            resHtml += `
-                                <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                                    <td class="p-3 font-bold text-white">${r.studentName}</td>
-                                    <td class="p-3 text-xs text-sky-400">${r.courseTitle}</td>
-                                    <td class="p-3 font-mono font-bold text-amber-400">${r.score} / ${r.total} (${percentage}%)</td>
-                                    <td class="p-3"><span class="text-xs px-2.5 py-1 rounded-lg border font-bold">${evaluation}</span></td>
-                                    <td class="p-3">
-                                        <button onclick="window.toggleQuizRetake('${rId}', ${canRetake})" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${canRetake ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
-                                            ${canRetake ? 'مسموح بالإعادة' : 'السماح بالإعادة'}
-                                        </button>
-                                    </td>
-                                    <td class="p-3">
-                                        <button onclick="window.deleteQuizResult('${rId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
-                                    </td>
-                                </tr>
-                            `;
-                        }
-                    });
-                    if(resultsBody) resultsBody.innerHTML = resHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج اختبارات مطابقة</td></tr>';
-                });
+        window.deleteQuizQuestion = async function(courseId, qId) {
+            showModal("تأكيد الحذف", "حذف هذا السؤال؟", "rose", async () => {
+                const target = adminCourses.find(c => c.id === courseId);
+                if(target && target.quiz) {
+                    const newQuiz = target.quiz.filter(q => q.id !== qId);
+                    await updateDoc(doc(db, "courses", courseId), { quiz: newQuiz });
+                }
             });
         }
 
-        // تبديل حالة السماح بإعادة الامتحان للطالب
         window.toggleQuizRetake = async function(resultId, currentStatus) {
             await updateDoc(doc(db, "quiz_results", resultId), { canRetake: !currentStatus });
         };
 
         window.deleteQuizResult = async function(resultId) {
-            showModal("تأكيد الحذف", "هل أنت متأكد من حذف نتيجة هذا الطالب؟", "rose", async () => {
-                await deleteDoc(doc(db, "quiz_results", resultId));
-            });
+            showModal("تأكيد الحذف", "حذف هذه النتيجة؟", "rose", async () => { await deleteDoc(doc(db, "quiz_results", resultId)); });
         };
+
+        window.deleteAllNotifications = async function() {
+            showModal("تأكيد الحذف", "حذف جميع الإشعارات؟", "rose", async () => {
+                const promises = adminNotifications.map(n => deleteDoc(doc(db, "notifications", n.id)));
+                await Promise.all(promises);
+            });
+        }
 
         window.openEditModal = function(id, title, subject, academicYear, videoUrl, description) {
             document.getElementById('edit-course-id').value = id;
@@ -576,12 +817,61 @@
             document.getElementById('edit-modal').classList.remove('hidden');
         }
 
+        window.openEditNotifModal = function(id, title, targetYear, message) {
+            document.getElementById('edit-notif-id').value = id;
+            document.getElementById('edit-notif-title').value = title;
+            document.getElementById('edit-notif-target').value = targetYear;
+            document.getElementById('edit-notif-msg').value = message;
+            document.getElementById('edit-notif-modal').classList.remove('hidden');
+        }
+
         window.toggleCourseStatus = async function(id, currentStatus) {
             await updateDoc(doc(db, "courses", id), { isActive: !currentStatus });
         };
 
+        window.toggleCodeStatus = async function(id, currentStatus) {
+            await updateDoc(doc(db, "activation_codes", id), { isDisabled: !currentStatus });
+        };
+
         window.deleteCourse = async function(id) {
             showModal("تأكيد الحذف", "حذف المحاضرة؟", "rose", async () => { await deleteDoc(doc(db, "courses", id)); });
+        };
+
+        window.deleteNotification = async function(id) {
+            showModal("تأكيد الحذف", "حذف التنبيه؟", "rose", async () => { await deleteDoc(doc(db, "notifications", id)); });
+        };
+
+        window.deleteCode = async function(id, usedByUserId, courseId) {
+            showModal("تأكيد الحذف", "حذف الكود؟", "rose", async () => {
+                if (usedByUserId && courseId) {
+                    try { await updateDoc(doc(db, "users", usedByUserId), { unlockedCourses: arrayRemove(courseId) }); } catch(e){}
+                }
+                await deleteDoc(doc(db, "activation_codes", id));
+            });
+        };
+
+        window.toggleDeviceBlock = async function(userId, currentStatus) {
+            await updateDoc(doc(db, "users", userId), { deviceBlocked: !currentStatus });
+        };
+
+        window.approveRequest = async function(reqId, userId, newName, newStudentPhone, newFatherPhone, newMotherPhone, newSchool, newGovernorate) {
+            await updateDoc(doc(db, "users", userId), {
+                fullName: newName, studentPhone: newStudentPhone, fatherPhone: newFatherPhone,
+                motherPhone: newMotherPhone, school: newSchool, governorate: newGovernorate
+            });
+            await updateDoc(doc(db, "profile_requests", reqId), { status: 'approved' });
+            await addDoc(collection(db, "notifications"), {
+                title: "تمت الموافقة على تعديل البيانات", message: "تم تحديث بياناتك بنجاح.", targetUserId: userId, createdAt: new Date()
+            });
+            showModal("تم", "تمت الموافقة بنجاح.");
+        };
+
+        window.rejectRequest = async function(reqId, userId) {
+            await updateDoc(doc(db, "profile_requests", reqId), { status: 'rejected' });
+            await addDoc(collection(db, "notifications"), {
+                title: "تم رفض طلب تعديل البيانات", message: "عذراً، تم رفض طلبك.", targetUserId: userId, createdAt: new Date()
+            });
+            showModal("تم", "تم الرفض.");
         };
     </script>
 </body>
