@@ -47,6 +47,28 @@
         </div>
     </div>
 
+    <!-- نافذة تعديل الإشعار -->
+    <div id="edit-notif-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>تعديل التنبيه</h3>
+            <form id="edit-notif-form" class="space-y-4">
+                <input type="hidden" id="edit-notif-id">
+                <input type="text" id="edit-notif-title" required placeholder="عنوان التنبيه" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                <select id="edit-notif-target" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
+                    <option value="all">جميع السنوات الدراسية</option>
+                    <option value="first">الصف الأول الثانوي فقط</option>
+                    <option value="second">الصف الثاني الثانوي فقط</option>
+                    <option value="third">الصف الثالث الثانوي فقط</option>
+                </select>
+                <textarea id="edit-notif-msg" required placeholder="نص التنبيه..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm h-20"></textarea>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition">حفظ التعديل</button>
+                    <button type="button" onclick="closeEditNotifModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-5 py-3 rounded-xl transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="app">
         <div class="flex items-center justify-center min-h-screen">
             <div class="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
@@ -56,7 +78,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, getDoc, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
@@ -102,6 +124,7 @@
 
         window.closeModal = function() { document.getElementById('custom-modal').classList.add('hidden'); }
         window.closeEditModal = function() { document.getElementById('edit-modal').classList.add('hidden'); }
+        window.closeEditNotifModal = function() { document.getElementById('edit-notif-modal').classList.add('hidden'); }
 
         onAuthStateChanged(auth, (user) => {
             if (user) { renderAdminDashboard(user); } else { renderLogin(); }
@@ -137,7 +160,6 @@
                         <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition">تسجيل الخروج</button>
                     </header>
 
-                    <!-- النشر والتوليد -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
                             <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-plus-circle text-sky-400 ml-2"></i>نشر محاضرة جديدة</h3>
@@ -170,7 +192,6 @@
                                 </form>
                             </div>
 
-                            <!-- نشر تنبيه جديد للطلاب -->
                             <div class="pt-4 border-t border-slate-800">
                                 <h3 class="text-md font-bold text-white mb-3"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>نشر تنبيه / إشعار للطلاب</h3>
                                 <form id="notification-form" class="space-y-3">
@@ -185,6 +206,26 @@
                                     <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition text-xs">نشر الإشعار الآن</button>
                                 </form>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- إدارة التنبيهات المنشورة (تعديل وحذف) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bullhorn text-sky-400 ml-2"></i>التنبيهات المنشورة (إدارة وتعديل)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-sm text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">العنوان</th>
+                                        <th class="p-3">مستهدفون</th>
+                                        <th class="p-3">الرسالة</th>
+                                        <th class="p-3">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-notifications-body">
+                                    <tr><td colspan="4" class="p-4 text-center text-slate-500">جاري التحميل...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -325,7 +366,6 @@
                 document.getElementById('generatedCodeInput').value = "";
             });
 
-            // إرسال إشعار جديد
             document.getElementById('notification-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 await addDoc(collection(db, "notifications"), {
@@ -334,7 +374,7 @@
                     targetYear: document.getElementById('notif-target').value,
                     createdAt: new Date()
                 });
-                showModal("تم بنجاح", "تم نشر التنبيه لجميع الطلاب المستهدفين.");
+                showModal("تم بنجاح", "تم نشر التنبيه للطلاب.");
                 document.getElementById('notification-form').reset();
             });
 
@@ -350,6 +390,18 @@
                 });
                 closeEditModal();
                 showModal("تم بنجاح", "تم تعديل بيانات المحاضرة بنجاح!");
+            });
+
+            document.getElementById('edit-notif-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('edit-notif-id').value;
+                await updateDoc(doc(db, "notifications", id), {
+                    title: document.getElementById('edit-notif-title').value,
+                    targetYear: document.getElementById('edit-notif-target').value,
+                    message: document.getElementById('edit-notif-msg').value
+                });
+                closeEditNotifModal();
+                showModal("تم بنجاح", "تم تعديل التنبيه بنجاح!");
             });
 
             document.getElementById('filter-year').addEventListener('change', setupRealtimeListeners);
@@ -409,6 +461,29 @@
                 if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات مطابقة</p>';
                 
                 loadCodesAndStudents();
+            });
+
+            // الاستماع للتنبيهات وعرضها في لوحة التحكم للحذف أو التعديل
+            onSnapshot(collection(db, "notifications"), (notifSnap) => {
+                const notifBody = document.getElementById('admin-notifications-body');
+                let notifHtml = '';
+                notifSnap.forEach(docSnap => {
+                    const n = docSnap.data();
+                    const nId = docSnap.id;
+                    const targetText = n.targetYear === 'all' ? 'جميع السنوات' : (n.targetYear === 'third' ? 'الثالث الثانوي' : n.targetYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي');
+                    notifHtml += `
+                        <tr class="border-b border-slate-800/60">
+                            <td class="p-3 font-bold text-white">${n.title}</td>
+                            <td class="p-3 text-xs text-sky-400">${targetText}</td>
+                            <td class="p-3 text-xs truncate max-w-xs">${n.message}</td>
+                            <td class="p-3 flex gap-2">
+                                <button onclick="window.openEditNotifModal('${nId}', '${n.title}', '${n.targetYear}', '${n.message}')" class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-xs font-bold transition hover:bg-sky-500 hover:text-slate-950">تعديل</button>
+                                <button onclick="window.deleteNotification('${nId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold transition hover:bg-rose-500 hover:text-white">حذف</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                if(notifBody) notifBody.innerHTML = notifHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد تنبيهات منشورة</td></tr>';
             });
 
             onSnapshot(collection(db, "profile_requests"), (reqSnap) => {
@@ -534,6 +609,14 @@
             document.getElementById('edit-modal').classList.remove('hidden');
         }
 
+        window.openEditNotifModal = function(id, title, targetYear, message) {
+            document.getElementById('edit-notif-id').value = id;
+            document.getElementById('edit-notif-title').value = title;
+            document.getElementById('edit-notif-target').value = targetYear;
+            document.getElementById('edit-notif-msg').value = message;
+            document.getElementById('edit-notif-modal').classList.remove('hidden');
+        }
+
         window.toggleCourseStatus = async function(id, currentStatus) {
             await updateDoc(doc(db, "courses", id), { isActive: !currentStatus });
         };
@@ -548,9 +631,14 @@
             });
         };
 
-        // عند حذف الكود، يتم إزالة المحاضرة من حساب الطالب فوراً
+        window.deleteNotification = async function(id) {
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا التنبيه؟", "rose", async () => {
+                await deleteDoc(doc(db, "notifications", id));
+            });
+        };
+
         window.deleteCode = async function(id, usedByUserId, courseId) {
-            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا الكود نهائياً؟ سيتم غلق المحاضرة من عند الطالب المفعل بها.", "rose", async () => {
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا الكود نهائياً؟ سيتم غلق المحاضرة من عند الطالب.", "rose", async () => {
                 if (usedByUserId && courseId) {
                     try {
                         await updateDoc(doc(db, "users", usedByUserId), {
@@ -577,7 +665,6 @@
             });
             await updateDoc(doc(db, "profile_requests", reqId), { status: 'approved' });
             
-            // إرسال تنبيه للطالب بموافقة التعديل
             await addDoc(collection(db, "notifications"), {
                 title: "تمت الموافقة على تعديل البيانات",
                 message: "قامت الإدارة بالموافقة على طلب تحديث بياناتك الشخصية بنجاح.",
@@ -591,10 +678,9 @@
         window.rejectRequest = async function(reqId, userId) {
             await updateDoc(doc(db, "profile_requests", reqId), { status: 'rejected' });
             
-            // إرسال تنبيه للطالب برفض التعديل
             await addDoc(collection(db, "notifications"), {
                 title: "تم رفض طلب تعديل البيانات",
-                message: "عذراً، قفلت الإدارة طلب تحديث بياناتك لعدم استيفاء الشروط.",
+                message: "عذراً، قامت الإدارة برفض طلب تحديث بياناتك.",
                 targetUserId: userId,
                 createdAt: new Date()
             });
@@ -602,7 +688,6 @@
             showModal("تم الرفض", "تم رفض طلب التعديل وإبلاغ الطالب.");
         };
 
-        // تصدير Excel سليم 100% باستخدام Blob
         document.getElementById('export-excel-btn')?.addEventListener('click', () => {
             if (allStudentsData.length === 0) { showModal("تنبيه", "لا توجد بيانات طلاب لتصديرها!", "rose"); return; }
             let csvContent = "الاسم الرباعي,هاتف الطالب,هاتف الأب,هاتف الأم,الرقم القومي,المدرسة,المحافظة,السنة الدراسية\n";
