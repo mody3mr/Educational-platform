@@ -11,7 +11,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-    <!-- نافذة منبثقة مخصصة للتنبيهات -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -57,7 +56,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, getDoc, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
@@ -133,7 +132,7 @@
                     <header class="flex justify-between items-center pb-6 border-b border-slate-800">
                         <div>
                             <h1 class="text-2xl font-black text-white">لوحة تحكم المعلم المركزية</h1>
-                            <p class="text-slate-400 text-sm">إدارة المحاضرات، الأكواد، ومتابعة الطلاب بشكل حي</p>
+                            <p class="text-slate-400 text-sm">إدارة المحاضرات، الأكواد، التنبيهات، ومتابعة الطلاب</p>
                         </div>
                         <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition">تسجيل الخروج</button>
                     </header>
@@ -156,24 +155,40 @@
                             </form>
                         </div>
 
-                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-6">
                             <div>
-                                <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-key text-amber-400 ml-2"></i>توليد أكواد تفعيل عشوائية وآمنة</h3>
+                                <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-key text-amber-400 ml-2"></i>توليد أكواد تفعيل عشوائية</h3>
                                 <form id="code-form" class="space-y-4">
                                     <select id="codeCourseSelect" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
                                         <option value="">اختر المحاضرة المراد توليد كود لها</option>
                                     </select>
                                     <div class="flex gap-3">
-                                        <input type="text" id="generatedCodeInput" readonly placeholder="الكود العشوائي سيظهر هنا" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-amber-400 font-mono font-bold text-center text-sm" />
-                                        <button type="button" id="generate-btn" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition">توليد عشوائي</button>
+                                        <input type="text" id="generatedCodeInput" readonly placeholder="الكود العشوائي" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-amber-400 font-mono font-bold text-center text-sm" />
+                                        <button type="button" id="generate-btn" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition">توليد</button>
                                     </div>
-                                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition">حفظ وتفعيل الكود في النظام</button>
+                                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition">حفظ وتفعيل الكود</button>
+                                </form>
+                            </div>
+
+                            <!-- نشر تنبيه جديد للطلاب -->
+                            <div class="pt-4 border-t border-slate-800">
+                                <h3 class="text-md font-bold text-white mb-3"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>نشر تنبيه / إشعار للطلاب</h3>
+                                <form id="notification-form" class="space-y-3">
+                                    <input type="text" id="notif-title" required placeholder="عنوان التنبيه" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
+                                    <select id="notif-target" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs">
+                                        <option value="all">جميع السنوات الدراسية</option>
+                                        <option value="first">الصف الأول الثانوي فقط</option>
+                                        <option value="second">الصف الثاني الثانوي فقط</option>
+                                        <option value="third">الصف الثالث الثانوي فقط</option>
+                                    </select>
+                                    <textarea id="notif-msg" required placeholder="نص التنبيه..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs h-16"></textarea>
+                                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition text-xs">نشر الإشعار الآن</button>
                                 </form>
                             </div>
                         </div>
                     </div>
 
-                    <!-- إدارة طلبات تعديل بيانات الطلاب -->
+                    <!-- طلبات تعديل البيانات -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                         <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-pen text-amber-400 ml-2"></i>طلبات تعديل بيانات الطلاب المعلقة</h3>
                         <div class="overflow-x-auto">
@@ -237,14 +252,14 @@
                         </div>
                     </div>
 
-                    <!-- إدارة الطلاب وتصدير Excel -->
+                    <!-- إدارة الطلاب -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>سجل الطلاب الكامل</h3>
                             <div class="flex gap-3 w-full md:w-auto">
-                                <input type="text" id="student-search" placeholder="ابحث باسم الطالب..." class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs flex-1 md:w-64" />
+                                <input type="text" id="student-search" placeholder="ابحث بالاسم، الهاتف، أو الرقم القومي..." class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs flex-1 md:w-72" />
                                 <button id="export-excel-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition">
-                                    <i class="fa-solid fa-file-excel"></i> Excel
+                                    <i class="fa-solid fa-file-excel"></i> تنزيل Excel
                                 </button>
                             </div>
                         </div>
@@ -310,6 +325,19 @@
                 document.getElementById('generatedCodeInput').value = "";
             });
 
+            // إرسال إشعار جديد
+            document.getElementById('notification-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await addDoc(collection(db, "notifications"), {
+                    title: document.getElementById('notif-title').value,
+                    message: document.getElementById('notif-msg').value,
+                    targetYear: document.getElementById('notif-target').value,
+                    createdAt: new Date()
+                });
+                showModal("تم بنجاح", "تم نشر التنبيه لجميع الطلاب المستهدفين.");
+                document.getElementById('notification-form').reset();
+            });
+
             document.getElementById('edit-course-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const id = document.getElementById('edit-course-id').value;
@@ -334,9 +362,7 @@
         let allStudentsData = [];
         let coursesMap = {};
 
-        // استخدام onSnapshot للتحديث الفوري الحي بدون ريفريش
         function setupRealtimeListeners() {
-            // الاستماع لتغييرات الكورسات
             onSnapshot(collection(db, "courses"), (coursesSnap) => {
                 const select = document.getElementById('codeCourseSelect');
                 const coursesGrid = document.getElementById('admin-courses-grid');
@@ -382,11 +408,9 @@
                 if(select) select.innerHTML = selectHtml;
                 if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات مطابقة</p>';
                 
-                // بعد تحديث الكورسات، نحدث الأكواد والطلاب
                 loadCodesAndStudents();
             });
 
-            // الاستماع لتغييرات طلبات تعديل البيانات
             onSnapshot(collection(db, "profile_requests"), (reqSnap) => {
                 const reqTbody = document.getElementById('requests-table-body');
                 let reqHtml = '';
@@ -403,8 +427,8 @@
                                     المدرسة / المحافظة: <span class="text-sky-400">${req.newSchool} / ${req.newGovernorate}</span>
                                 </td>
                                 <td class="p-3 flex gap-2">
-                                    <button onclick="window.approveRequest('${reqId}', '${req.userId}', '${req.newFullName}', '${req.newStudentPhone}', '${req.newFatherPhone}', '${req.newMotherPhone}', '${req.newSchool}', '${req.newGovernorate}')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-xs font-bold transition text-white">موافقة وتحديث</button>
-                                    <button onclick="window.rejectRequest('${reqId}')" class="bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold transition">رفض</button>
+                                    <button onclick="window.approveRequest('${reqId}', '${req.userId}', '${req.newFullName}', '${req.newStudentPhone}', '${req.newFatherPhone}', '${req.newMotherPhone}', '${req.newSchool}', '${req.newGovernorate}')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-xs font-bold transition text-white">موافقة</button>
+                                    <button onclick="window.rejectRequest('${reqId}', '${req.userId}')" class="bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold transition">رفض</button>
                                 </td>
                             </tr>
                         `;
@@ -415,7 +439,6 @@
         }
 
         function loadCodesAndStudents() {
-            // الاستماع للطلاب
             onSnapshot(collection(db, "users"), (usersSnap) => {
                 const studentsTbody = document.getElementById('students-table-body');
                 const searchTerm = document.getElementById('student-search')?.value.toLowerCase() || '';
@@ -429,12 +452,15 @@
                     allStudentsData.push({ id: stId, ...st });
                     studentsMap[stId] = `${st.fullName || 'بدون اسم'} / ${st.studentPhone || '-'}`;
 
-                    const fullName = st.fullName || '';
-                    if (searchTerm === '' || fullName.toLowerCase().includes(searchTerm)) {
+                    const fullName = (st.fullName || '').toLowerCase();
+                    const phone = (st.studentPhone || '').toLowerCase();
+                    const nationalId = (st.nationalId || '').toLowerCase();
+
+                    if (searchTerm === '' || fullName.includes(searchTerm) || phone.includes(searchTerm) || nationalId.includes(searchTerm)) {
                         const isDeviceBlocked = st.deviceBlocked || false;
                         studentsHtml += `
                             <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                                <td class="p-3 font-bold text-white">${fullName}</td>
+                                <td class="p-3 font-bold text-white">${st.fullName}</td>
                                 <td class="p-3 text-xs">
                                     طالب: <span class="font-mono text-sky-400">${st.studentPhone || '-'}</span><br>
                                     أب: <span class="font-mono">${st.fatherPhone || '-'}</span> | أم: <span class="font-mono">${st.motherPhone || '-'}</span>
@@ -443,7 +469,7 @@
                                 <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
                                 <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث' : st.academicYear === 'second' ? 'الثاني' : 'الأول'} الثانوي</td>
                                 <td class="p-3 flex items-center gap-2">
-                                    ${isDeviceBlocked ? '<span class="text-rose-400 text-xs font-bold">الجهاز محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">مسموح</span>'}
+                                    ${isDeviceBlocked ? '<span class="text-rose-400 text-xs font-bold">محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">مسموح</span>'}
                                     <button onclick="window.toggleDeviceBlock('${stId}', ${isDeviceBlocked})" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg font-bold transition">
                                         ${isDeviceBlocked ? 'رفع الحظر' : 'حظر الجهاز'}
                                     </button>
@@ -454,7 +480,6 @@
                 });
                 if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مطابقة للبحث</td></tr>';
 
-                // الاستماع للأكواد بعد جاهزية خريطة الطلاب
                 onSnapshot(collection(db, "activation_codes"), (codesSnap) => {
                     const codesTbody = document.getElementById('codes-table-body');
                     const codeStatusFilter = document.getElementById('filter-code-status')?.value || 'all';
@@ -488,7 +513,7 @@
                                         <button onclick="window.toggleCodeStatus('${codeId}', ${isDisabled})" class="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-lg text-xs font-bold transition">
                                             ${isDisabled ? 'تفعيل' : 'تعطيل'}
                                         </button>
-                                        <button onclick="window.deleteCode('${codeId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
+                                        <button onclick="window.deleteCode('${codeId}', '${codeObj.usedBy || ''}', '${codeObj.courseId || ''}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
                                     </td>
                                 </tr>
                             `;
@@ -523,8 +548,16 @@
             });
         };
 
-        window.deleteCode = async function(id) {
-            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا الكود نهائياً؟", "rose", async () => {
+        // عند حذف الكود، يتم إزالة المحاضرة من حساب الطالب فوراً
+        window.deleteCode = async function(id, usedByUserId, courseId) {
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا الكود نهائياً؟ سيتم غلق المحاضرة من عند الطالب المفعل بها.", "rose", async () => {
+                if (usedByUserId && courseId) {
+                    try {
+                        await updateDoc(doc(db, "users", usedByUserId), {
+                            unlockedCourses: arrayRemove(courseId)
+                        });
+                    } catch (err) { console.log(err); }
+                }
                 await deleteDoc(doc(db, "activation_codes", id));
             });
         };
@@ -533,7 +566,6 @@
             await updateDoc(doc(db, "users", userId), { deviceBlocked: !currentStatus });
         };
 
-        // الموافقة على تعديل بيانات الطالب
         window.approveRequest = async function(reqId, userId, newName, newStudentPhone, newFatherPhone, newMotherPhone, newSchool, newGovernorate) {
             await updateDoc(doc(db, "users", userId), {
                 fullName: newName,
@@ -544,15 +576,33 @@
                 governorate: newGovernorate
             });
             await updateDoc(doc(db, "profile_requests", reqId), { status: 'approved' });
+            
+            // إرسال تنبيه للطالب بموافقة التعديل
+            await addDoc(collection(db, "notifications"), {
+                title: "تمت الموافقة على تعديل البيانات",
+                message: "قامت الإدارة بالموافقة على طلب تحديث بياناتك الشخصية بنجاح.",
+                targetUserId: userId,
+                createdAt: new Date()
+            });
+
             showModal("تم بنجاح", "تم الموافقة على تحديث بيانات الطالب.");
         };
 
-        window.rejectRequest = async function(reqId) {
+        window.rejectRequest = async function(reqId, userId) {
             await updateDoc(doc(db, "profile_requests", reqId), { status: 'rejected' });
-            showModal("تم الرفض", "تم رفض طلب التعديل.");
+            
+            // إرسال تنبيه للطالب برفض التعديل
+            await addDoc(collection(db, "notifications"), {
+                title: "تم رفض طلب تعديل البيانات",
+                message: "عذراً، قفلت الإدارة طلب تحديث بياناتك لعدم استيفاء الشروط.",
+                targetUserId: userId,
+                createdAt: new Date()
+            });
+
+            showModal("تم الرفض", "تم رفض طلب التعديل وإبلاغ الطالب.");
         };
 
-        // تصدير ملف إكسيل باستخدام Blob السليم
+        // تصدير Excel سليم 100% باستخدام Blob
         document.getElementById('export-excel-btn')?.addEventListener('click', () => {
             if (allStudentsData.length === 0) { showModal("تنبيه", "لا توجد بيانات طلاب لتصديرها!", "rose"); return; }
             let csvContent = "الاسم الرباعي,هاتف الطالب,هاتف الأب,هاتف الأم,الرقم القومي,المدرسة,المحافظة,السنة الدراسية\n";
