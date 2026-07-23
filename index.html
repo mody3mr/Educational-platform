@@ -36,21 +36,21 @@
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // استبدل ببيانات مشروعك الحقيقية
-       const firebaseConfig = {
-        apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
-        authDomain: "educational-platform-f5e7e.firebaseapp.com",
-        projectId: "educational-platform-f5e7e",
-        storageBucket: "educational-platform-f5e7e.firebasestorage.app",
-        messagingSenderId: "284103839814",
-        appId: "1:284103839814:web:9b6abd761a585c46f03a47"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
+            authDomain: "educational-platform-f5e7e.firebaseapp.com",
+            projectId: "educational-platform-f5e7e",
+            storageBucket: "educational-platform-f5e7e.firebasestorage.app",
+            messagingSenderId: "284103839814",
+            appId: "1:284103839814:web:9b6abd761a585c46f03a47"
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         const appDiv = document.getElementById('app');
+        let allCourses = []; // لتخزين الكورسات للبحث والفلترة
 
         // مراقبة حالة المصادقة
         onAuthStateChanged(auth, (user) => {
@@ -61,11 +61,10 @@
             }
         });
 
-        // 1. تصميم شاشة تسجيل الدخول الاحترافية
+        // 1. شاشة تسجيل الدخول
         function renderLoginView() {
             appDiv.innerHTML = `
                 <div class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
-                    <!-- خلفية مضيئة متطورة -->
                     <div class="absolute -top-40 -right-40 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
                     <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -82,20 +81,16 @@
                             <div>
                                 <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">البريد الإلكتروني</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500">
-                                        <i class="fa-solid fa-envelope"></i>
-                                    </span>
-                                    <input type="email" id="email" required placeholder="name@example.com" class="w-full bg-slate-950/60 border border-slate-800 rounded-2xl pr-11 pl-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition text-sm" />
+                                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500"><i class="fa-solid fa-envelope"></i></span>
+                                    <input type="email" id="email" required placeholder="name@example.com" class="w-full bg-slate-950/60 border border-slate-800 rounded-2xl pr-11 pl-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 text-sm" />
                                 </div>
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">كلمة المرور</label>
                                 <div class="relative">
-                                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500">
-                                        <i class="fa-solid fa-lock"></i>
-                                    </span>
-                                    <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950/60 border border-slate-800 rounded-2xl pr-11 pl-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition text-sm" />
+                                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500"><i class="fa-solid fa-lock"></i></span>
+                                    <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950/60 border border-slate-800 rounded-2xl pr-11 pl-4 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 text-sm" />
                                 </div>
                             </div>
 
@@ -104,7 +99,6 @@
                                 <i class="fa-solid fa-arrow-left"></i>
                             </button>
                         </form>
-
                         <div id="error-msg" class="text-rose-400 text-xs font-bold mt-4 text-center"></div>
                     </div>
                 </div>
@@ -115,7 +109,6 @@
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 const errorMsg = document.getElementById('error-msg');
-
                 try {
                     await signInWithEmailAndPassword(auth, email, password);
                 } catch (error) {
@@ -124,11 +117,11 @@
             });
         }
 
-        // 2. تصميم لوحة التحكم الفاخرة للطالب
+        // 2. لوحة التحكم الرئيسية للطالب
         function renderStudentDashboard(user) {
             appDiv.innerHTML = `
                 <div class="min-h-screen flex flex-col md:flex-row">
-                    <!-- القائمة الجانبية الاحترافية -->
+                    <!-- القائمة الجانبية -->
                     <aside class="w-full md:w-72 bg-slate-900/50 backdrop-blur-xl border-l border-slate-800/80 p-6 flex flex-col justify-between hidden md:flex">
                         <div>
                             <div class="flex items-center gap-3 mb-10 px-2">
@@ -140,7 +133,6 @@
                                     <span class="text-xs text-sky-400 font-semibold">بوابة الطالب الذكية</span>
                                 </div>
                             </div>
-
                             <nav class="space-y-1.5">
                                 <a href="#" class="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 transition">
                                     <i class="fa-solid fa-compass text-lg"></i>
@@ -148,7 +140,6 @@
                                 </a>
                             </nav>
                         </div>
-
                         <div class="pt-4 border-t border-slate-800/80">
                             <button id="logout-btn" class="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl hover:bg-rose-500/10 text-rose-400 font-semibold transition group">
                                 <i class="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
@@ -159,11 +150,10 @@
 
                     <!-- المحتوى الرئيسي -->
                     <main class="flex-1 p-6 md:p-12 overflow-y-auto">
-                        <!-- هيدر الصفحة الفخم -->
-                        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 pb-8 border-b border-slate-800/80">
+                        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pb-8 border-b border-slate-800/80">
                             <div>
                                 <h2 class="text-3xl md:text-4xl font-black text-white tracking-tight">أهلاً بك يا بطل! 👋</h2>
-                                <p class="text-slate-400 text-sm mt-1.5">استمر في متابعة دروسك لتحقيق أعلى الدرجات.</p>
+                                <p class="text-slate-400 text-sm mt-1.5">اختر المحاضرة وابدأ رحلة التفوق الدراسي.</p>
                             </div>
                             <div class="flex items-center gap-3 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl shadow-inner">
                                 <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-black text-sm">
@@ -177,20 +167,20 @@
                             </div>
                         </header>
 
-                        <!-- قسم عرض الكورسات -->
-                        <div>
-                            <div class="flex items-center justify-between mb-6">
-                                <h3 class="text-xl font-extrabold text-white flex items-center gap-2.5">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse"></span>
-                                    المحاضرات والكورسات المتاحة
-                                </h3>
+                        <!-- حاوية المحتوى الديناميكي (إما الكورسات أو شاشة مشغل الفيديو) -->
+                        <div id="dynamic-content">
+                            <!-- شريط البحث -->
+                            <div class="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+                                <div class="relative w-full md:w-96">
+                                    <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500"><i class="fa-solid fa-search"></i></span>
+                                    <input type="text" id="search-input" placeholder="ابحث عن محاضرة..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl pr-11 pl-4 py-3 text-white text-sm focus:outline-none focus:border-sky-500" />
+                                </div>
                             </div>
 
                             <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <!-- كارت التحميل الوهمي -->
                                 <div class="bg-slate-900/50 border border-slate-800/80 rounded-3xl p-6 h-64 flex flex-col justify-center items-center gap-3 animate-pulse col-span-full">
                                     <div class="w-8 h-8 rounded-full border-2 border-sky-500 border-t-transparent animate-spin"></div>
-                                    <p class="text-slate-400 text-sm">جاري جلب المحاضرات من الخادم...</p>
+                                    <p class="text-slate-400 text-sm">جاري جلب المحاضرات...</p>
                                 </div>
                             </div>
                         </div>
@@ -203,61 +193,122 @@
             document.getElementById('logout-btn-mob')?.addEventListener('click', handleLogout);
 
             loadCourses();
+
+            // تفعيل البحث
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = allCourses.filter(c => c.title.toLowerCase().includes(term) || (c.subject && c.subject.toLowerCase().includes(term)));
+                displayCourses(filtered);
+            });
         }
 
-        // 3. دالة جلب الكورسات وعرضها في كروت فاخرة
+        // جلب الكورسات من فايربيس
         async function loadCourses() {
-            const grid = document.getElementById('courses-grid');
             try {
                 const querySnapshot = await getDocs(collection(db, "courses"));
-                if (querySnapshot.empty) {
-                    grid.innerHTML = `
-                        <div class="col-span-full py-16 text-center bg-slate-900/40 border border-slate-800/80 rounded-3xl">
-                            <div class="w-16 h-16 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
-                                <i class="fa-solid fa-box-open"></i>
-                            </div>
-                            <h4 class="text-lg font-bold text-white">لا توجد كورسات متاحة حالياً</h4>
-                            <p class="text-slate-400 text-sm mt-1">سيتم إضافة محاضرات جديدة قريباً من قبل المدرس.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                let html = '';
+                allCourses = [];
                 querySnapshot.forEach((doc) => {
-                    const c = doc.data();
-                    html += `
-                        <div class="group bg-slate-900/80 backdrop-blur-md border border-slate-800/80 rounded-3xl overflow-hidden hover:border-sky-500/50 transition-all duration-300 flex flex-col justify-between shadow-xl hover:shadow-2xl hover:shadow-sky-500/10 hover:-translate-y-1">
-                            <div>
-                                <div class="h-44 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-sky-400 relative overflow-hidden">
-                                    <div class="absolute inset-0 bg-sky-500/5 group-hover:bg-sky-500/10 transition"></div>
-                                    <i class="fa-solid fa-play-circle text-5xl opacity-80 group-hover:scale-110 transition-transform duration-300"></i>
-                                    <span class="absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md text-xs font-bold text-sky-400 px-3 py-1 rounded-xl border border-slate-800">
-                                        ${c.subject || 'مادة دراسية'}
-                                    </span>
-                                </div>
-                                <div class="p-6">
-                                    <h3 class="text-lg font-extrabold text-white group-hover:text-sky-400 transition-colors">${c.title}</h3>
-                                    <p class="text-slate-400 text-sm mt-2.5 leading-relaxed line-clamp-2">${c.description || 'لا يوجد وصف متاح.'}</p>
-                                </div>
-                            </div>
-                            <div class="p-6 pt-0">
-                                <button onclick="alert('جاري فتح المحاضرة قريباً...')" class="w-full bg-sky-500/10 hover:bg-sky-500 text-sky-400 hover:text-slate-950 font-extrabold py-3.5 rounded-2xl transition-all duration-300 border border-sky-500/20 flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-play text-xs"></i>
-                                    <span>مشاهدة المحاضرة</span>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                    allCourses.push({ id: doc.id, ...doc.data() });
                 });
-                grid.innerHTML = html;
+                displayCourses(allCourses);
             } catch (err) {
-                grid.innerHTML = `
+                document.getElementById('courses-grid').innerHTML = `
                     <div class="col-span-full py-12 text-center bg-rose-500/10 border border-rose-500/20 rounded-3xl">
-                        <p class="text-rose-400 font-bold">حدث خطأ أثناء تحميل الكورسات من قاعدة البيانات.</p>
+                        <p class="text-rose-400 font-bold">حدث خطأ أثناء تحميل الكورسات.</p>
                     </div>
                 `;
             }
+        }
+
+        // عرض الكورسات في الكروت
+        function displayCourses(courses) {
+            const grid = document.getElementById('courses-grid');
+            if (!grid) return;
+
+            if (courses.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 text-center bg-slate-900/40 border border-slate-800/80 rounded-3xl">
+                        <div class="w-16 h-16 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+                            <i class="fa-solid fa-box-open"></i>
+                        </div>
+                        <h4 class="text-lg font-bold text-white">لا توجد محاضرات مطابقة للبحث</h4>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            courses.forEach((c) => {
+                html += `
+                    <div class="group bg-slate-900/80 backdrop-blur-md border border-slate-800/80 rounded-3xl overflow-hidden hover:border-sky-500/50 transition-all duration-300 flex flex-col justify-between shadow-xl hover:-translate-y-1">
+                        <div>
+                            <div class="h-44 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-sky-400 relative overflow-hidden">
+                                <div class="absolute inset-0 bg-sky-500/5 group-hover:bg-sky-500/10 transition"></div>
+                                <i class="fa-solid fa-play-circle text-5xl opacity-80 group-hover:scale-110 transition-transform duration-300"></i>
+                                <span class="absolute bottom-3 right-3 bg-slate-950/80 backdrop-blur-md text-xs font-bold text-sky-400 px-3 py-1 rounded-xl border border-slate-800">
+                                    ${c.subject || 'مادة دراسية'}
+                                </span>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-lg font-extrabold text-white group-hover:text-sky-400 transition-colors">${c.title}</h3>
+                                <p class="text-slate-400 text-sm mt-2.5 leading-relaxed line-clamp-2">${c.description || 'لا يوجد وصف متاح.'}</p>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <button onclick="window.openLesson('${c.title}', '${c.subject || ''}', '${c.description || ''}', '${c.videoUrl || ''}')" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3.5 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20">
+                                <i class="fa-solid fa-play text-xs"></i>
+                                <span>مشاهدة المحاضرة</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        // 3. صفحة تشغيل المحاضرة الحقيقية (Video Player View)
+        window.openLesson = function(title, subject, desc, videoUrl) {
+            const dynamicContent = document.getElementById('dynamic-content');
+            
+            // إذا لم يتم وضع رابط يوتيوب في الكورس، نضع فيديو افتراضي تعليمي كمثال
+            let embedHtml = '';
+            if (videoUrl && videoUrl.includes('youtube')) {
+                // استخراج معرف يوتيوب وتحويله لـ embed لو العضو حط رابط عادي
+                let videoId = videoUrl.split('v=')[1]?.split('&')[0] || videoUrl.split('/').pop();
+                embedHtml = `<iframe class="w-full h-full rounded-2xl" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+            } else {
+                embedHtml = `
+                    <div class="w-full h-full bg-slate-950 rounded-2xl flex flex-col items-center justify-center text-center p-6 border border-slate-800">
+                        <div class="w-20 h-20 bg-sky-500/10 text-sky-400 rounded-3xl flex items-center justify-center mb-4 text-3xl">
+                            <i class="fa-solid fa-video-slash"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">عذراً، لم يتم إدراج رابط فيديو لهذا الدرس بعد</h3>
+                        <p class="text-slate-400 text-sm mt-2">تواصل مع المع师 لإضافة رابط الفيديو الخاص بهذه المحاضرة.</p>
+                    </div>
+                `;
+            }
+
+            dynamicContent.innerHTML = `
+                <div>
+                    <!-- زر العودة -->
+                    <button onclick="window.location.reload()" class="mb-6 flex items-center gap-2 text-sky-400 hover:text-sky-300 font-bold transition">
+                        <i class="fa-solid fa-arrow-right"></i>
+                        <span>العودة لقائمة المحاضرات</span>
+                    </button>
+
+                    <!-- مشغل الفيديو -->
+                    <div class="w-full aspect-video bg-slate-900 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl mb-8">
+                        ${embedHtml}
+                    </div>
+
+                    <!-- تفاصيل المحاضرة -->
+                    <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl">
+                        <span class="text-xs bg-sky-500/10 text-sky-400 font-bold px-3 py-1 rounded-xl border border-sky-500/20">${subject}</span>
+                        <h2 class="text-2xl md:text-3xl font-black text-white mt-4">${title}</h2>
+                        <p class="text-slate-300 text-base mt-4 leading-relaxed">${desc}</p>
+                    </div>
+                </div>
+            `;
         }
     </script>
 </body>
