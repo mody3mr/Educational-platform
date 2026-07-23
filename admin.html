@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم المدرس - إدارة الأكواد والكورسات</title>
+    <title>لوحة تحكم المعلم - الإدارة المتقدمة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -13,14 +13,14 @@
 
     <div id="app">
         <div class="flex items-center justify-center min-h-screen">
-            <p class="text-slate-400">جاري التحميل...</p>
+            <div class="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
@@ -48,11 +48,11 @@
             appDiv.innerHTML = `
                 <div class="min-h-screen flex items-center justify-center p-4">
                     <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
-                        <h2 class="text-2xl font-bold text-white mb-6 text-center">دخول المدرس</h2>
+                        <h2 class="text-2xl font-bold text-white mb-6 text-center">دخول لوحة التحكم</h2>
                         <form id="login-form" class="space-y-4">
-                            <input type="email" id="email" required placeholder="البريد الإلكتروني" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            <input type="password" id="password" required placeholder="كلمة المرور" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            <button type="submit" class="w-full bg-sky-500 text-slate-950 font-bold py-3 rounded-xl">تسجيل الدخول</button>
+                            <input type="email" id="email" required placeholder="البريد الإلكتروني" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
+                            <input type="password" id="password" required placeholder="كلمة المرور" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
+                            <button type="submit" class="w-full bg-sky-500 text-slate-950 font-bold py-3 rounded-xl transition">تسجيل الدخول</button>
                         </form>
                     </div>
                 </div>
@@ -65,52 +65,112 @@
 
         async function renderAdminDashboard(user) {
             appDiv.innerHTML = `
-                <div class="min-h-screen p-6 md:p-10 max-w-6xl mx-auto">
-                    <header class="flex justify-between items-center mb-8 pb-6 border-b border-slate-800">
+                <div class="min-h-screen p-6 md:p-10 max-w-7xl mx-auto space-y-8">
+                    <header class="flex justify-between items-center pb-6 border-b border-slate-800">
                         <div>
-                            <h1 class="text-2xl font-black text-white">لوحة تحكم المعلم</h1>
-                            <p class="text-slate-400 text-sm">إدارة المحاضرات وتوليد أكواد التفعيل</p>
+                            <h1 class="text-2xl font-black text-white">لوحة تحكم المعلم المركزية</h1>
+                            <p class="text-slate-400 text-sm">إدارة المحاضرات، الأكواد، ومتابعة الطلاب</p>
                         </div>
-                        <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl text-sm font-bold">تسجيل الخروج</button>
+                        <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition">تسجيل الخروج</button>
                     </header>
 
-                    <!-- إضافة كورس -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 mb-8 shadow-xl">
-                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-plus-circle text-sky-400 ml-2"></i>إضافة محاضرة جديدة</h3>
-                        <form id="course-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="title" required placeholder="عنوان المحاضرة (مثال: الباب الأول فيزياء)" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            <input type="text" id="subject" required placeholder="اسم المادة (فيزياء، كيمياء...)" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            <select id="academicYear" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
-                                <option value="first">الصف الأول الثانوي</option>
-                                <option value="second">الصف الثاني الثانوي</option>
-                                <option value="third">الصف الثالث الثانوي</option>
-                            </select>
-                            <input type="text" id="videoUrl" required placeholder="رابط يوتيوب (Embed أو عادي)" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            <textarea id="description" placeholder="وصف المحاضرة..." class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm h-24"></textarea>
-                            <button type="submit" class="md:col-span-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3 rounded-xl transition">نشر المحاضرة</button>
-                        </form>
+                    <!-- شبكة التحكم -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- إضافة محاضرة -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+                            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-plus-circle text-sky-400 ml-2"></i>نشر محاضرة جديدة</h3>
+                            <form id="course-form" class="space-y-4">
+                                <input type="text" id="title" required placeholder="عنوان المحاضرة (مثال: الباب الأول فيزياء)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                                <input type="text" id="subject" required placeholder="اسم المادة" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                                <select id="academicYear" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
+                                    <option value="first">الصف الأول الثانوي</option>
+                                    <option value="second">الصف الثاني الثانوي</option>
+                                    <option value="third">الصف الثالث الثانوي</option>
+                                </select>
+                                <input type="text" id="videoUrl" required placeholder="رابط يوتيوب للفيديو" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                                <textarea id="description" placeholder="وصف المحاضرة..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm h-20"></textarea>
+                                <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3 rounded-xl transition">نشر المحاضرة</button>
+                            </form>
+                        </div>
+
+                        <!-- توليد أكواد تفعيل عشوائية -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-key text-amber-400 ml-2"></i>توليد أكواد تفعيل عشوائية وآمنة</h3>
+                                <form id="code-form" class="space-y-4">
+                                    <select id="codeCourseSelect" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
+                                        <option value="">اختر المحاضرة المراد توليد كود لها</option>
+                                    </select>
+                                    <div class="flex gap-3">
+                                        <input type="text" id="generatedCodeInput" readonly placeholder="الكود العشوائي سيظهر هنا" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-3 text-amber-400 font-mono font-bold text-center text-sm" />
+                                        <button type="button" id="generate-btn" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition">توليد عشوائي</button>
+                                    </div>
+                                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition">حفظ وتفعيل الكود في النظام</button>
+                                </form>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400">
+                                * كل كود مخصص لجهاز/طالب واحد فقط (Single-Use)، ولا يمكن إعادة استخدامه نهائياً بعد تفعيله.
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- توليد أكواد التفعيل -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 mb-8 shadow-xl">
-                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-key text-amber-400 ml-2"></i>توليد كود تفعيل لمدرس / محاضرة</h3>
-                        <form id="code-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <select id="codeCourseSelect" required class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
-                                <option value="">اختر المحاضرة المطلوبة</option>
-                            </select>
-                            <input type="text" id="customCode" required placeholder="الكود (مثال: PHYS-9921)" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition">إنشاء الكود وإرساله للنظام</button>
-                        </form>
+                    <!-- قسم إدارة الأكواد النشطة -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-list-check text-sky-400 ml-2"></i>إدارة الأكواد والتحكم فيها</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-sm text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">الكود السري</th>
+                                        <th class="p-3">حالة الاستخدام</th>
+                                        <th class="p-3">مستخدم بواسطة (ID)</th>
+                                        <th class="p-3">إجراءات التحكم</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="codes-table-body">
+                                    <tr><td colspan="4" class="p-4 text-center text-slate-500">جاري تحميل الأكواد...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- قائمة الكورسات والأكواد -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="admin-courses-list"></div>
+                    <!-- قسم إدارة الطلاب وتصدير Excel -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>إدارة الطلاب المسجلين</h3>
+                            <button id="export-excel-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition">
+                                <i class="fa-solid fa-file-excel"></i> تنزيل نسخة احتياطية (Excel / CSV)
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-sm text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">اسم الطالب</th>
+                                        <th class="p-3">الهاتف</th>
+                                        <th class="p-3">الرقم القومي</th>
+                                        <th class="p-3">المدرسة / المحافظة</th>
+                                        <th class="p-3">الحالة والتحكم</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="students-table-body">
+                                    <tr><td colspan="5" class="p-4 text-center text-slate-500">جاري تحميل بيانات الطلاب...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             `;
 
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-            // إضافة كورس
+            // زر توليد كود عشوائي فريد من 6 أرقام
+            document.getElementById('generate-btn').addEventListener('click', () => {
+                const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+                document.getElementById('generatedCodeInput').value = randomCode;
+            });
+
+            // نشر المحاضرة
             document.getElementById('course-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 await addDoc(collection(db, "courses"), {
@@ -121,63 +181,144 @@
                     description: document.getElementById('description').value,
                     createdAt: new Date()
                 });
-                alert("تم بنجاح نشر المحاضرة!");
+                showCustomAlert("تم بنجاح نشر المحاضرة!");
                 document.getElementById('course-form').reset();
                 loadAdminData();
             });
 
-            // توليد كود
+            // حفظ الكود العشوائي
             document.getElementById('code-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const courseId = document.getElementById('codeCourseSelect').value;
-                const code = document.getElementById('customCode').value.trim();
+                const code = document.getElementById('generatedCodeInput').value;
+                if (!code) {
+                    showCustomAlert("الرجاء توليد كود أولاً!");
+                    return;
+                }
 
                 await addDoc(collection(db, "activation_codes"), {
                     code: code,
                     courseId: courseId,
                     isUsed: false,
-                    usedBy: null
+                    usedBy: null,
+                    createdAt: new Date()
                 });
-                alert("تم توليد الكود بنجاح!");
+                showCustomAlert("تم حفظ وتفعيل الكود بنجاح!");
                 document.getElementById('code-form').reset();
+                document.getElementById('generatedCodeInput').value = "";
+                loadAdminData();
             });
 
             loadAdminData();
         }
 
-        async function loadAdminData() {
-            const list = document.getElementById('admin-courses-list');
-            const select = document.getElementById('codeCourseSelect');
-            const snapshot = await getDocs(collection(db, "courses"));
-            
-            let html = '';
-            let selectHtml = '<option value="">اختر المحاضرة المطلوبة</option>';
+        let allStudentsData = [];
 
-            snapshot.forEach((docSnap) => {
+        async function loadAdminData() {
+            // تحميل الكورسات
+            const coursesSnap = await getDocs(collection(db, "courses"));
+            const select = document.getElementById('codeCourseSelect');
+            let selectHtml = '<option value="">اختر المحاضرة المراد توليد كود لها</option>';
+            coursesSnap.forEach(docSnap => {
                 const c = docSnap.data();
-                const id = docSnap.id;
-                selectHtml += `<option value="${id}">${c.title} (${c.subject})</option>`;
-                html += `
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
-                        <div>
-                            <span class="text-xs bg-sky-500/10 text-sky-400 px-3 py-1 rounded-full font-bold">${c.subject}</span>
-                            <h4 class="text-base font-bold text-white mt-3">${c.title}</h4>
-                            <p class="text-slate-400 text-xs mt-1">السنة: ${c.academicYear}</p>
-                        </div>
-                        <button onclick="window.delCourse('${id}')" class="mt-4 bg-rose-500/10 text-rose-400 font-bold py-2 rounded-xl text-xs hover:bg-rose-500 hover:text-white transition">حذف المحاضرة</button>
-                    </div>
+                selectHtml += `<option value="${docSnap.id}">${c.title} (${c.subject})</option>`;
+            });
+            if(select) select.innerHTML = selectHtml;
+
+            // تحميل الأكواد
+            const codesSnap = await getDocs(collection(db, "codes") || collection(db, "activation_codes"));
+            const codesTbody = document.getElementById('codes-table-body');
+            let codesHtml = '';
+            codesSnap.forEach(docSnap => {
+                const codeObj = docSnap.data();
+                const codeId = docSnap.id;
+                codesHtml += `
+                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                        <td class="p-3 font-mono text-amber-400 font-bold">${codeObj.code}</td>
+                        <td class="p-3">
+                            ${codeObj.isUsed ? '<span class="bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-lg text-xs font-bold">مستخدم</span>' : '<span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-lg text-xs font-bold">متاح</span>'}
+                        </td>
+                        <td class="p-3 text-xs text-slate-400 truncate max-w-[120px]">${codeObj.usedBy || 'لا يوجد'}</td>
+                        <td class="p-3 flex gap-2">
+                            <button onclick="window.deleteCode('${codeId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
+                        </td>
+                    </tr>
                 `;
             });
-            list.innerHTML = html || '<p class="text-slate-400">لا توجد كورسات مضافة</p>';
-            select.innerHTML = selectHtml;
+            if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد أكواد مولدة</td></tr>';
+
+            // تحميل الطلاب
+            const usersSnap = await getDocs(collection(db, "users"));
+            const studentsTbody = document.getElementById('students-table-body');
+            let studentsHtml = '';
+            allStudentsData = [];
+
+            usersSnap.forEach(docSnap => {
+                const st = docSnap.data();
+                const stId = docSnap.id;
+                allStudentsData.push({ id: stId, ...st });
+
+                const isBlocked = st.isBlocked || false;
+                studentsHtml += `
+                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">${st.fullName || 'بدون اسم'}</td>
+                        <td class="p-3 font-mono">${st.studentPhone || '-'}</td>
+                        <td class="p-3 font-mono">${st.nationalId || '-'}</td>
+                        <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
+                        <td class="p-3 flex items-center gap-2">
+                            ${isBlocked ? '<span class="text-rose-400 text-xs font-bold">محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">نشط</span>'}
+                            <button onclick="window.toggleBlock('${stId}', ${isBlocked})" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                                ${isBlocked ? 'إلغاء الحظر' : 'حظر الطالب'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد بيانات طلاب مسجلين</td></tr>';
         }
 
-        window.delCourse = async function(id) {
-            if(confirm("هل أنت متأكد من الحذف؟")) {
-                await deleteDoc(doc(db, "courses", id));
+        // حذف كود
+        window.deleteCode = async function(id) {
+            if(confirm("هل أنت متأكد من حذف هذا الكود نهائياً؟")) {
+                await deleteDoc(doc(db, "activation_codes", id));
                 loadAdminData();
             }
         };
+
+        // حظر / إلغاء حظر طالب
+        window.toggleBlock = async function(userId, currentStatus) {
+            await updateDoc(doc(db, "users", userId), {
+                isBlocked: !currentStatus
+            });
+            loadAdminData();
+        };
+
+        // تصدير ملف إكسيل CSV
+        document.getElementById('export-excel-btn')?.addEventListener('click', () => {
+            if (allStudentsData.length === 0) {
+                showCustomAlert("لا توجد بيانات طلاب لتصديرها!");
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "الاسم الرباعي,هاتف الطالب,هاتف الأب,هاتف الأم,الرقم القومي,المدرسة,المحافظة,السنة الدراسية\n";
+
+            allStudentsData.forEach(st => {
+                let row = `"${st.fullName || ''}","${st.studentPhone || ''}","${st.fatherPhone || ''}","${st.motherPhone || ''}","${st.nationalId || ''}","${st.school || ''}","${st.governorate || ''}","${st.academicYear || ''}"`;
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "students_database.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        function showCustomAlert(msg) {
+            alert(msg);
+        }
     </script>
 </body>
 </html>
