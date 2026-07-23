@@ -11,7 +11,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-    <!-- نافذة التنبيهات العامة -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -48,29 +47,7 @@
         </div>
     </div>
 
-    <!-- نافذة تعديل الإشعار -->
-    <div id="edit-notif-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl">
-            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>تعديل التنبيه</h3>
-            <form id="edit-notif-form" class="space-y-4">
-                <input type="hidden" id="edit-notif-id">
-                <input type="text" id="edit-notif-title" required placeholder="عنوان التنبيه" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                <select id="edit-notif-target" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
-                    <option value="all">جميع السنوات الدراسية</option>
-                    <option value="first">الصف الأول الثانوي فقط</option>
-                    <option value="second">الصف الثاني الثانوي فقط</option>
-                    <option value="third">الصف الثالث الثانوي فقط</option>
-                </select>
-                <textarea id="edit-notif-msg" required placeholder="نص التنبيه..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm h-20"></textarea>
-                <div class="flex gap-3">
-                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition">حفظ التعديل</button>
-                    <button type="button" onclick="document.getElementById('edit-notif-modal').classList.add('hidden')" class="bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">إلغاء</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- نافذة تعديل سؤال الامتحان (المضافة حديثاً لمنع أي خطأ) -->
+    <!-- نافذة تعديل سؤال الامتحان -->
     <div id="edit-quiz-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-pen text-indigo-400 ml-2"></i>تعديل سؤال الامتحان</h3>
@@ -93,22 +70,6 @@
                 <div class="flex gap-3 pt-2">
                     <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition">حفظ تعديل السؤال</button>
                     <button type="button" onclick="document.getElementById('edit-quiz-modal').classList.add('hidden')" class="bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">إلغاء</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- نافذة تعديل الملف (المضافة حديثاً لمنع أي خطأ) -->
-    <div id="edit-file-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl">
-            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-pen text-rose-400 ml-2"></i>تعديل عنوان الملف</h3>
-            <form id="edit-file-form" class="space-y-4">
-                <input type="hidden" id="edit-file-course-id">
-                <input type="hidden" id="edit-file-id">
-                <input type="text" id="edit-file-title" required placeholder="عنوان الملف" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                <div class="flex gap-3">
-                    <button type="submit" class="flex-1 bg-rose-600 text-white font-bold py-3 rounded-xl">حفظ</button>
-                    <button type="button" onclick="document.getElementById('edit-file-modal').classList.add('hidden')" class="bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">إلغاء</button>
                 </div>
             </form>
         </div>
@@ -256,17 +217,23 @@
                         </div>
                     </div>
 
-                    <!-- رفع ملف PDF + سؤال اختبار -->
+                    <!-- رفع ملف PDF أو كتابة رابط مباشر + سؤال اختبار -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-file-pdf text-rose-400 ml-2"></i>رفع ملف PDF للمحاضرة</h3>
+                            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-file-pdf text-rose-400 ml-2"></i>إرفاق ملف PDF للمحاضرة</h3>
                             <form id="file-form" class="space-y-4">
                                 <select id="fileCourseSelect" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
                                     <option value="">اختر المحاضرة المستهدفة</option>
                                 </select>
-                                <input type="text" id="fileTitle" required placeholder="عنوان الملزمة" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                                <input type="file" id="pdfFileInput" accept="application/pdf" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm file:bg-rose-600 file:text-white file:border-none file:rounded-lg file:px-4 file:py-2 file:cursor-pointer" />
-                                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-3 rounded-xl transition">رفع وربط الملف</button>
+                                <input type="text" id="fileTitle" required placeholder="عنوان الملزمة (مثال: ملخص الباب الأول)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">اختر ملف PDF (من جهازك) أو ضع رابطاً مباشراً بالأسفل:</label>
+                                    <input type="file" id="pdfFileInput" accept="application/pdf" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm file:bg-rose-600 file:text-white file:border-none file:rounded-lg file:px-4 file:py-2 file:cursor-pointer" />
+                                </div>
+                                <div>
+                                    <input type="url" id="fileUrlInput" placeholder="أو ضع رابط مباشر (اختياري لو لم ترفع ملفاً من جهازك)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                                </div>
+                                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-3 rounded-xl transition">إرفاق الملف بالمحاضرة</button>
                             </form>
                         </div>
 
@@ -298,7 +265,7 @@
                         </div>
                     </div>
 
-                    <!-- إدارة التنبيهات -->
+                    <!-- إدارة التنبيهات المنشورة -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bullhorn text-sky-400 ml-2"></i>التنبيهات المنشورة</h3>
@@ -451,31 +418,41 @@
                 document.getElementById('generatedCodeInput').value = "";
             });
 
+            // إرفاق ملف PDF (سواء رفع من الجهاز أو رابط مباشر)
             document.getElementById('file-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const courseId = document.getElementById('fileCourseSelect').value;
                 const title = document.getElementById('fileTitle').value;
                 const fileInput = document.getElementById('pdfFileInput');
+                const urlInput = document.getElementById('fileUrlInput').value.trim();
                 
-                if (!fileInput.files[0]) { showModal("تنبيه", "اختر ملف PDF!", "rose"); return; }
-                showModal("جاري الرفع", "يتم رفع الملف...", "sky");
+                let fileUrl = urlInput;
 
-                try {
-                    const file = fileInput.files[0];
-                    const storageRef = ref(storage, `course_files/${Date.now()}_${file.name}`);
-                    await uploadBytes(storageRef, file);
-                    const fileUrl = await getDownloadURL(storageRef);
-
-                    const target = adminCourses.find(c => c.id === courseId);
-                    const currentFiles = target ? (target.files || []) : [];
-                    currentFiles.push({ id: Date.now().toString(), title, url: fileUrl });
-                    await updateDoc(doc(db, "courses", courseId), { files: currentFiles });
-                    
-                    showModal("تم بنجاح", "تم رفع الملف بنجاح!");
-                    document.getElementById('file-form').reset();
-                } catch (err) {
-                    showModal("خطأ", "فشل الرفع: " + err.message, "rose");
+                if (fileInput.files[0]) {
+                    showModal("جاري الرفع", "يتم رفع الملف للسحابي...", "sky");
+                    try {
+                        const file = fileInput.files[0];
+                        const storageRef = ref(storage, `course_files/${Date.now()}_${file.name}`);
+                        await uploadBytes(storageRef, file);
+                        fileUrl = await getDownloadURL(storageRef);
+                    } catch (err) {
+                        showModal("خطأ", "فشل الرفع لـ Storage: " + err.message, "rose");
+                        return;
+                    }
                 }
+
+                if (!fileUrl) {
+                    showModal("تنبيه", "الرجاء اختيار ملف من الجهاز أو إدخال رابط مباشر!", "rose");
+                    return;
+                }
+
+                const target = adminCourses.find(c => c.id === courseId);
+                const currentFiles = target ? (target.files || []) : [];
+                currentFiles.push({ id: Date.now().toString(), title, url: fileUrl });
+                await updateDoc(doc(db, "courses", courseId), { files: currentFiles });
+                
+                showModal("تم بنجاح", "تم إرفاق الملف بنجاح ويظهر الآن للطلاب!");
+                document.getElementById('file-form').reset();
             });
 
             document.getElementById('quiz-form').addEventListener('submit', async (e) => {
@@ -485,7 +462,7 @@
                 const question = document.getElementById('quizQuestion').value;
                 const options = [
                     document.getElementById('opt0').value, document.getElementById('opt1').value,
-                    document.getElementById('opt2').value, document.getElementById('opt3').value
+                    document.getElementById('opt2').value, document.getElementById('opt3'].value
                 ];
                 const correct = parseInt(document.getElementById('quizCorrect').value);
 
@@ -803,7 +780,7 @@
         };
 
         window.deleteQuizResult = async function(resultId) {
-            showModal("تأكيد الحذف", "حذف النتيجة؟", "rose", async () => { await deleteDoc(doc(db, "quiz_results", resultId)); });
+            showModal("تأكيد الحذف", "حذف هذه النتيجة؟", "rose", async () => { await deleteDoc(doc(db, "quiz_results", resultId)); });
         };
 
         window.deleteAllNotifications = async function() {
@@ -821,6 +798,15 @@
             document.getElementById('edit-videoUrl').value = videoUrl;
             document.getElementById('edit-description').value = description;
             document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        window.openEditNotifModal = function(id, title, targetYear, message) {
+            document.getElementById('edit-notif-id').value = id;
+            document.getElementById('edit-notif-title').value = title;
+            document.getElementById('edit-notif-target').value = targetYear;
+            document.getElementById('edit-notif-msg').value = message;
+            document.getElementById('edit-notif-modal').classList.add('hidden'); // Fix modal close/open
+            document.getElementById('edit-notif-modal').classList.remove('hidden');
         }
 
         window.toggleCourseStatus = async function(id, currentStatus) {
