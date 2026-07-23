@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم المعلم - الإدارة المتقدمة</title>
+    <title>لوحة تحكم المعلم - الإدارة المركزية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -74,9 +74,9 @@
                         <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition">تسجيل الخروج</button>
                     </header>
 
-                    <!-- شبكة التحكم -->
+                    <!-- شبكة النشر والتوليد -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <!-- إضافة محاضرة -->
+                        <!-- نشر محاضرة -->
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
                             <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-plus-circle text-sky-400 ml-2"></i>نشر محاضرة جديدة</h3>
                             <form id="course-form" class="space-y-4">
@@ -109,8 +109,16 @@
                                 </form>
                             </div>
                             <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400">
-                                * كل كود مخصص لجهاز/طالب واحد فقط (Single-Use)، ولا يمكن إعادة استخدامه نهائياً بعد تفعيله.
+                                * كل كود مخصص لجهاز/طالب واحد فقط (Single-Use).
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- قسم إدارة المحاضرات (ايقاف، تشغيل، تعديل، حذف) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
+                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-book-open text-sky-400 ml-2"></i>إدارة المحاضرات المنشورة</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="admin-courses-grid">
+                            <p class="text-slate-500">جاري تحميل المحاضرات...</p>
                         </div>
                     </div>
 
@@ -134,10 +142,10 @@
                         </div>
                     </div>
 
-                    <!-- قسم إدارة الطلاب وتصدير Excel -->
+                    <!-- قسم إدارة الطلاب الشاملة وتصدير Excel -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>إدارة الطلاب المسجلين</h3>
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>سجل الطلاب الكامل وبياناتهم</h3>
                             <button id="export-excel-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition">
                                 <i class="fa-solid fa-file-excel"></i> تنزيل نسخة احتياطية (Excel / CSV)
                             </button>
@@ -146,15 +154,16 @@
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
-                                        <th class="p-3">اسم الطالب</th>
-                                        <th class="p-3">الهاتف</th>
+                                        <th class="p-3">اسم الطالب الرباعي</th>
+                                        <th class="p-3">هاتف الطالب / الأب / الأم</th>
                                         <th class="p-3">الرقم القومي</th>
-                                        <th class="p-3">المدرسة / المحافظة</th>
-                                        <th class="p-3">الحالة والتحكم</th>
+                                        <th class="p-3">المدرسة والمحافظة</th>
+                                        <th class="p-3">السنة الدراسية</th>
+                                        <th class="p-3">التحكم (حظر / تفعيل)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="students-table-body">
-                                    <tr><td colspan="5" class="p-4 text-center text-slate-500">جاري تحميل بيانات الطلاب...</td></tr>
+                                    <tr><td colspan="6" class="p-4 text-center text-slate-500">جاري تحميل بيانات الطلاب...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -164,7 +173,7 @@
 
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-            // زر توليد كود عشوائي فريد من 6 أرقام
+            // توليد كود عشوائي فريد من 6 أرقام
             document.getElementById('generate-btn').addEventListener('click', () => {
                 const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
                 document.getElementById('generatedCodeInput').value = randomCode;
@@ -179,9 +188,10 @@
                     academicYear: document.getElementById('academicYear').value,
                     videoUrl: document.getElementById('videoUrl').value,
                     description: document.getElementById('description').value,
+                    isActive: true, // حالة المحاضرة (نشطة افتراضياً)
                     createdAt: new Date()
                 });
-                showCustomAlert("تم بنجاح نشر المحاضرة!");
+                alert("تم بنجاح نشر المحاضرة!");
                 document.getElementById('course-form').reset();
                 loadAdminData();
             });
@@ -192,7 +202,7 @@
                 const courseId = document.getElementById('codeCourseSelect').value;
                 const code = document.getElementById('generatedCodeInput').value;
                 if (!code) {
-                    showCustomAlert("الرجاء توليد كود أولاً!");
+                    alert("الرجاء توليد كود أولاً!");
                     return;
                 }
 
@@ -203,7 +213,7 @@
                     usedBy: null,
                     createdAt: new Date()
                 });
-                showCustomAlert("تم حفظ وتفعيل الكود بنجاح!");
+                alert("تم حفظ وتفعيل الكود بنجاح!");
                 document.getElementById('code-form').reset();
                 document.getElementById('generatedCodeInput').value = "";
                 loadAdminData();
@@ -215,18 +225,47 @@
         let allStudentsData = [];
 
         async function loadAdminData() {
-            // تحميل الكورسات
+            // 1. تحميل وتحديث عرض الكورسات في الداشبورد
             const coursesSnap = await getDocs(collection(db, "courses"));
             const select = document.getElementById('codeCourseSelect');
+            const coursesGrid = document.getElementById('admin-courses-grid');
+            
             let selectHtml = '<option value="">اختر المحاضرة المراد توليد كود لها</option>';
+            let coursesHtml = '';
+
             coursesSnap.forEach(docSnap => {
                 const c = docSnap.data();
-                selectHtml += `<option value="${docSnap.id}">${c.title} (${c.subject})</option>`;
+                const id = docSnap.id;
+                const isActive = c.isActive !== false; // افتراضي نشط
+
+                selectHtml += `<option value="${id}">${c.title} (${c.subject})</option>`;
+                
+                coursesHtml += `
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
+                                <span class="text-xs px-2 py-0.5 rounded-md font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+                                    ${isActive ? 'نشطة' : 'متوقفة'}
+                                </span>
+                            </div>
+                            <h4 class="text-base font-bold text-white">${c.title}</h4>
+                            <p class="text-slate-400 text-xs mt-1">السنة: ${c.academicYear}</p>
+                        </div>
+                        <div class="mt-4 flex gap-2">
+                            <button onclick="window.toggleCourseStatus('${id}', ${isActive})" class="flex-1 bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-xl font-bold transition">
+                                ${isActive ? 'إيقاف' : 'تشغيل'}
+                            </button>
+                            <button onclick="window.deleteCourse('${id}')" class="bg-rose-500/10 text-rose-400 text-xs px-3 py-2 rounded-xl font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
+                        </div>
+                    </div>
+                `;
             });
             if(select) select.innerHTML = selectHtml;
+            if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات منشورة</p>';
 
-            // تحميل الأكواد
-            const codesSnap = await getDocs(collection(db, "codes") || collection(db, "activation_codes"));
+            // 2. تحميل الأكواد من جدول activation_codes
+            const codesSnap = await getDocs(collection(db, "activation_codes"));
             const codesTbody = document.getElementById('codes-table-body');
             let codesHtml = '';
             codesSnap.forEach(docSnap => {
@@ -247,7 +286,7 @@
             });
             if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد أكواد مولدة</td></tr>';
 
-            // تحميل الطلاب
+            // 3. تحميل بيانات الطلاب بالكامل
             const usersSnap = await getDocs(collection(db, "users"));
             const studentsTbody = document.getElementById('students-table-body');
             let studentsHtml = '';
@@ -262,20 +301,40 @@
                 studentsHtml += `
                     <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
                         <td class="p-3 font-bold text-white">${st.fullName || 'بدون اسم'}</td>
-                        <td class="p-3 font-mono">${st.studentPhone || '-'}</td>
-                        <td class="p-3 font-mono">${st.nationalId || '-'}</td>
+                        <td class="p-3 text-xs">
+                            طالب: <span class="font-mono text-sky-400">${st.studentPhone || '-'}</span><br>
+                            أب: <span class="font-mono">${st.fatherPhone || '-'}</span> | أم: <span class="font-mono">${st.motherPhone || '-'}</span>
+                        </td>
+                        <td class="p-3 font-mono text-xs">${st.nationalId || '-'}</td>
                         <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
+                        <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث الثانوي' : st.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي'}</td>
                         <td class="p-3 flex items-center gap-2">
                             ${isBlocked ? '<span class="text-rose-400 text-xs font-bold">محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">نشط</span>'}
                             <button onclick="window.toggleBlock('${stId}', ${isBlocked})" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg font-bold transition">
-                                ${isBlocked ? 'إلغاء الحظر' : 'حظر الطالب'}
+                                ${isBlocked ? 'إلغاء الحظر' : 'حظر'}
                             </button>
                         </td>
                     </tr>
                 `;
             });
-            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد بيانات طلاب مسجلين</td></tr>';
+            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد بيانات طلاب مسجلين</td></tr>';
         }
+
+        // إيقاف أو تشغيل المحاضرة
+        window.toggleCourseStatus = async function(id, currentStatus) {
+            await updateDoc(doc(db, "courses", id), {
+                isActive: !currentStatus
+            });
+            loadAdminData();
+        };
+
+        // حذف محاضرة
+        window.deleteCourse = async function(id) {
+            if(confirm("هل أنت متأكد من حذف هذه المحاضرة نهائياً؟")) {
+                await deleteDoc(doc(db, "courses", id));
+                loadAdminData();
+            }
+        };
 
         // حذف كود
         window.deleteCode = async function(id) {
@@ -293,10 +352,10 @@
             loadAdminData();
         };
 
-        // تصدير ملف إكسيل CSV
+        // تصدير ملف إكسيل CSV كامل ببيانات الطلاب
         document.getElementById('export-excel-btn')?.addEventListener('click', () => {
             if (allStudentsData.length === 0) {
-                showCustomAlert("لا توجد بيانات طلاب لتصديرها!");
+                alert("لا توجد بيانات طلاب لتصديرها!");
                 return;
             }
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
@@ -315,10 +374,6 @@
             link.click();
             document.body.removeChild(link);
         });
-
-        function showCustomAlert(msg) {
-            alert(msg);
-        }
     </script>
 </body>
 </html>
