@@ -57,7 +57,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
@@ -73,7 +73,6 @@
         const db = getFirestore(app);
         const appDiv = document.getElementById('app');
 
-        // نظام مودال مخصص احترافي
         window.showModal = function(title, text, type = "sky", onConfirm = null) {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-text').innerText = text;
@@ -103,20 +102,11 @@
             document.getElementById('custom-modal').classList.remove('hidden');
         }
 
-        window.closeModal = function() {
-            document.getElementById('custom-modal').classList.add('hidden');
-        }
-
-        window.closeEditModal = function() {
-            document.getElementById('edit-modal').classList.add('hidden');
-        }
+        window.closeModal = function() { document.getElementById('custom-modal').classList.add('hidden'); }
+        window.closeEditModal = function() { document.getElementById('edit-modal').classList.add('hidden'); }
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                renderAdminDashboard(user);
-            } else {
-                renderLogin();
-            }
+            if (user) { renderAdminDashboard(user); } else { renderLogin(); }
         });
 
         function renderLogin() {
@@ -181,29 +171,42 @@
                                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition">حفظ وتفعيل الكود في النظام</button>
                                 </form>
                             </div>
-                            <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400">
-                                * كل كود مخصص لجهاز/طالب واحد فقط (Single-Use).
-                            </div>
                         </div>
                     </div>
 
-                    <!-- إدارة المحاضرات (تعديل، إيقاف، تشغيل، حذف) -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-book-open text-sky-400 ml-2"></i>إدارة المحاضرات المنشورة</h3>
+                    <!-- إدارة المحاضرات (تعديل، إيقاف، حذف) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-book-open text-sky-400 ml-2"></i>إدارة المحاضرات المنشورة</h3>
+                            <select id="filter-year" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs">
+                                <option value="all">جميع السنوات الدراسية</option>
+                                <option value="first">الصف الأول الثانوي</option>
+                                <option value="second">الصف الثاني الثانوي</option>
+                                <option value="third">الصف الثالث الثانوي</option>
+                            </select>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="admin-courses-grid">
                             <p class="text-slate-500">جاري تحميل المحاضرات...</p>
                         </div>
                     </div>
 
-                    <!-- إدارة الأكواد مع اسم المحاضرة والتعطيل المؤقت -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-list-check text-sky-400 ml-2"></i>إدارة الأكواد والتحكم فيها</h3>
+                    <!-- إدارة الأكواد مع فلتر الحالة -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check text-sky-400 ml-2"></i>إدارة الأكواد والتحكم فيها</h3>
+                            <select id="filter-code-status" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs">
+                                <option value="all">جميع الأكواد</option>
+                                <option value="available">الأكواد المتاحة (الغير مستخدمة)</option>
+                                <option value="used">الأكواد المستخدمة</option>
+                                <option value="disabled">الأكواد المعطلة</option>
+                            </select>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
                                         <th class="p-3">الكود السري</th>
-                                        <th class="p-3">يتبع محاضرة</th>
+                                        <th class="p-3">يتبع المحاضرة</th>
                                         <th class="p-3">الحالة</th>
                                         <th class="p-3">مستخدم بواسطة</th>
                                         <th class="p-3">إجراءات التحكم</th>
@@ -216,13 +219,16 @@
                         </div>
                     </div>
 
-                    <!-- إدارة الطلاب وتصدير Excel -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>سجل الطلاب الكامل وبياناتهم</h3>
-                            <button id="export-excel-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition">
-                                <i class="fa-solid fa-file-excel"></i> تنزيل نسخة احتياطية (Excel / CSV)
-                            </button>
+                    <!-- إدارة الطلاب مع البحث السريع وتصدير Excel -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>سجل الطلاب الكامل</h3>
+                            <div class="flex gap-3 w-full md:w-auto">
+                                <input type="text" id="student-search" placeholder="ابحث باسم الطالب..." class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs flex-1 md:w-64" />
+                                <button id="export-excel-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition">
+                                    <i class="fa-solid fa-file-excel"></i> Excel
+                                </button>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
@@ -233,7 +239,7 @@
                                         <th class="p-3">الرقم القومي</th>
                                         <th class="p-3">المدرسة / المحافظة</th>
                                         <th class="p-3">السنة</th>
-                                        <th class="p-3">التحكم</th>
+                                        <th class="p-3">التحكم الأمني (حظر جهاز)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="students-table-body">
@@ -272,16 +278,13 @@
                 e.preventDefault();
                 const courseId = document.getElementById('codeCourseSelect').value;
                 const code = document.getElementById('generatedCodeInput').value;
-                if (!code) {
-                    showModal("تنبيه", "الرجاء توليد كود أولاً!", "rose");
-                    return;
-                }
+                if (!code) { showModal("تنبيه", "الرجاء توليد كود أولاً!", "rose"); return; }
 
                 await addDoc(collection(db, "activation_codes"), {
                     code: code,
                     courseId: courseId,
                     isUsed: false,
-                    isDisabled: false, // متاح للاستخدام افتراضياً
+                    isDisabled: false,
                     usedBy: null,
                     createdAt: new Date()
                 });
@@ -291,7 +294,6 @@
                 loadAdminData();
             });
 
-            // تعديل المحاضرة
             document.getElementById('edit-course-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const id = document.getElementById('edit-course-id').value;
@@ -307,118 +309,152 @@
                 loadAdminData();
             });
 
+            // ربط الفلاتر والبحث
+            document.getElementById('filter-year').addEventListener('change', loadAdminData);
+            document.getElementById('filter-code-status').addEventListener('change', loadAdminData);
+            document.getElementById('student-search').addEventListener('input', loadAdminData);
+
             loadAdminData();
         }
 
         let allStudentsData = [];
         let coursesMap = {};
+        let allCoursesList = [];
+        let allCodesList = [];
 
         async function loadAdminData() {
             const coursesSnap = await getDocs(collection(db, "courses"));
             const select = document.getElementById('codeCourseSelect');
             const coursesGrid = document.getElementById('admin-courses-grid');
+            const yearFilter = document.getElementById('filter-year')?.value || 'all';
             
             let selectHtml = '<option value="">اختر المحاضرة المراد توليد كود لها</option>';
             let coursesHtml = '';
             coursesMap = {};
+            allCoursesList = [];
 
             coursesSnap.forEach(docSnap => {
                 const c = docSnap.data();
                 const id = docSnap.id;
-                coursesMap[id] = c.title;
-                const isActive = c.isActive !== false;
+                coursesMap[id] = { title: c.title, year: c.academicYear };
+                allCoursesList.push({ id, ...c });
 
                 selectHtml += `<option value="${id}">${c.title} (${c.subject})</option>`;
-                
-                coursesHtml += `
-                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
-                                <span class="text-xs px-2 py-0.5 rounded-md font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
-                                    ${isActive ? 'نشطة' : 'متوقفة'}
-                                </span>
+
+                if (yearFilter === 'all' || c.academicYear === yearFilter) {
+                    const isActive = c.isActive !== false;
+                    coursesHtml += `
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
+                                    <span class="text-xs px-2 py-0.5 rounded-md font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+                                        ${isActive ? 'نشطة' : 'متوقفة'}
+                                    </span>
+                                </div>
+                                <h4 class="text-base font-bold text-white">${c.title}</h4>
+                                <p class="text-slate-400 text-xs mt-1">السنة: ${c.academicYear === 'third' ? 'الثالث الثانوي' : c.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي'}</p>
                             </div>
-                            <h4 class="text-base font-bold text-white">${c.title}</h4>
-                            <p class="text-slate-400 text-xs mt-1">السنة: ${c.academicYear}</p>
+                            <div class="mt-4 grid grid-cols-3 gap-2">
+                                <button onclick="window.openEditModal('${id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold hover:bg-sky-500 hover:text-slate-950 transition">تعديل</button>
+                                <button onclick="window.toggleCourseStatus('${id}', ${isActive})" class="bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-xl font-bold transition">
+                                    ${isActive ? 'إيقاف' : 'تشغيل'}
+                                </button>
+                                <button onclick="window.deleteCourse('${id}')" class="bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
+                            </div>
                         </div>
-                        <div class="mt-4 grid grid-cols-3 gap-2">
-                            <button onclick="window.openEditModal('${id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold hover:bg-sky-500 hover:text-slate-950 transition">تعديل</button>
-                            <button onclick="window.toggleCourseStatus('${id}', ${isActive})" class="bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-xl font-bold transition">
-                                ${isActive ? 'إيقاف' : 'تشغيل'}
-                            </button>
-                            <button onclick="window.deleteCourse('${id}')" class="bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
-                        </div>
-                    </div>
-                `;
+                    `;
+                }
             });
             if(select) select.innerHTML = selectHtml;
-            if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات منشورة</p>';
+            if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات مطابقة</p>';
 
-            // تحميل الأكواد مع اسم المحاضرة وزر التعطيل/التفعيل
-            const codesSnap = await getDocs(collection(db, "activation_codes"));
-            const codesTbody = document.getElementById('codes-table-body');
-            let codesHtml = '';
-            codesSnap.forEach(docSnap => {
-                const codeObj = docSnap.data();
-                const codeId = docSnap.id;
-                const courseName = coursesMap[codeObj.courseId] || 'محاضرة محذوفة';
-                const isDisabled = codeObj.isDisabled || false;
-
-                codesHtml += `
-                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                        <td class="p-3 font-mono text-amber-400 font-bold">${codeObj.code}</td>
-                        <td class="p-3 text-xs text-sky-300 font-semibold">${courseName}</td>
-                        <td class="p-3">
-                            ${codeObj.isUsed ? '<span class="bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-lg text-xs font-bold">مستخدم</span>' : (isDisabled ? '<span class="bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-bold">معطل مؤقتاً</span>' : '<span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-lg text-xs font-bold">متاح</span>')}
-                        </td>
-                        <td class="p-3 text-xs text-slate-400 truncate max-w-[120px]">${codeObj.usedBy || 'لا يوجد'}</td>
-                        <td class="p-3 flex gap-2">
-                            <button onclick="window.toggleCodeStatus('${codeId}', ${isDisabled})" class="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-lg text-xs font-bold transition">
-                                ${isDisabled ? 'تفعيل' : 'تعطيل'}
-                            </button>
-                            <button onclick="window.deleteCode('${codeId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد أكواد مولدة</td></tr>';
-
-            // تحميل الطلاب
+            // تحميل الطلاب أولاً عشان نقدر نربط الـ ID بالاسم في الأكواد
             const usersSnap = await getDocs(collection(db, "users"));
-            const studentsTbody = document.getElementById('students-table-body');
-            let studentsHtml = '';
             allStudentsData = [];
-
+            let studentsMap = {};
             usersSnap.forEach(docSnap => {
                 const st = docSnap.data();
                 const stId = docSnap.id;
                 allStudentsData.push({ id: stId, ...st });
-
-                const isBlocked = st.isBlocked || false;
-                studentsHtml += `
-                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                        <td class="p-3 font-bold text-white">${st.fullName || 'بدون اسم'}</td>
-                        <td class="p-3 text-xs">
-                            طالب: <span class="font-mono text-sky-400">${st.studentPhone || '-'}</span><br>
-                            أب: <span class="font-mono">${st.fatherPhone || '-'}</span> | أم: <span class="font-mono">${st.motherPhone || '-'}</span>
-                        </td>
-                        <td class="p-3 font-mono text-xs">${st.nationalId || '-'}</td>
-                        <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
-                        <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث الثانوي' : st.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي'}</td>
-                        <td class="p-3 flex items-center gap-2">
-                            ${isBlocked ? '<span class="text-rose-400 text-xs font-bold">محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">نشط</span>'}
-                            <button onclick="window.toggleBlock('${stId}', ${isBlocked})" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg font-bold transition">
-                                ${isBlocked ? 'إلغاء الحظر' : 'حظر'}
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                studentsMap[stId] = `${st.fullName || 'بدون اسم'} / ${st.studentPhone || '-'}`;
             });
-            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد بيانات طلاب مسجلين</td></tr>';
+
+            // تحميل الأكواد مع الفلتر
+            const codesSnap = await getDocs(collection(db, "activation_codes"));
+            const codesTbody = document.getElementById('codes-table-body');
+            const codeStatusFilter = document.getElementById('filter-code-status')?.value || 'all';
+            let codesHtml = '';
+
+            codesSnap.forEach(docSnap => {
+                const codeObj = docSnap.data();
+                const codeId = docSnap.id;
+                const courseInfo = coursesMap[codeObj.courseId] || { title: 'محاضرة محذوفة', year: '-' };
+                const yearText = courseInfo.year === 'third' ? 'الثالث الثانوي' : courseInfo.year === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي';
+                const courseLabel = `${courseInfo.title} / ${yearText}`;
+                
+                const isDisabled = codeObj.isDisabled || false;
+                const isUsed = codeObj.isUsed || false;
+
+                let matchesFilter = true;
+                if (codeStatusFilter === 'available' && (isUsed || isDisabled)) matchesFilter = false;
+                if (codeStatusFilter === 'used' && !isUsed) matchesFilter = false;
+                if (codeStatusFilter === 'disabled' && !isDisabled) matchesFilter = false;
+
+                if (matchesFilter) {
+                    const studentDetails = codeObj.usedBy ? (studentsMap[codeObj.usedBy] || codeObj.usedBy) : 'لا يوجد';
+                    codesHtml += `
+                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                            <td class="p-3 font-mono text-amber-400 font-bold">${codeObj.code}</td>
+                            <td class="p-3 text-xs text-sky-300 font-semibold">${courseLabel}</td>
+                            <td class="p-3">
+                                ${isUsed ? '<span class="bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-lg text-xs font-bold">مستخدم</span>' : (isDisabled ? '<span class="bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-bold">معطل</span>' : '<span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-lg text-xs font-bold">متاح</span>')}
+                            </td>
+                            <td class="p-3 text-xs text-slate-300">${studentDetails}</td>
+                            <td class="p-3 flex gap-2">
+                                <button onclick="window.toggleCodeStatus('${codeId}', ${isDisabled})" class="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-lg text-xs font-bold transition">
+                                    ${isDisabled ? 'تفعيل' : 'تعطيل'}
+                                </button>
+                                <button onclick="window.deleteCode('${codeId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد أكواد مطابقة للفلتر</td></tr>';
+
+            // عرض الطلاب مع البحث بالاسم
+            const studentsTbody = document.getElementById('students-table-body');
+            const searchTerm = document.getElementById('student-search')?.value.toLowerCase() || '';
+            let studentsHtml = '';
+
+            allStudentsData.forEach(st => {
+                const fullName = st.fullName || '';
+                if (searchTerm === '' || fullName.toLowerCase().includes(searchTerm)) {
+                    const isDeviceBlocked = st.deviceBlocked || false;
+                    studentsHtml += `
+                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                            <td class="p-3 font-bold text-white">${fullName}</td>
+                            <td class="p-3 text-xs">
+                                طالب: <span class="font-mono text-sky-400">${st.studentPhone || '-'}</span><br>
+                                أب: <span class="font-mono">${st.fatherPhone || '-'}</span> | أم: <span class="font-mono">${st.motherPhone || '-'}</span>
+                            </td>
+                            <td class="p-3 font-mono text-xs">${st.nationalId || '-'}</td>
+                            <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
+                            <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث' : st.academicYear === 'second' ? 'الثاني' : 'الأول'} الثانوي</td>
+                            <td class="p-3 flex items-center gap-2">
+                                ${isDeviceBlocked ? '<span class="text-rose-400 text-xs font-bold">الجهاز محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">الطهاز مسموح</span>'}
+                                <button onclick="window.toggleDeviceBlock('${st.id}', ${isDeviceBlocked})" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                                    ${isDeviceBlocked ? 'رفع الحظر عن الجهاز' : 'حظر الجهاز'}
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مطابقة للبحث</td></tr>';
         }
 
-        // فتح نافذة التعديل
         window.openEditModal = function(id, title, subject, academicYear, videoUrl, description) {
             document.getElementById('edit-course-id').value = id;
             document.getElementById('edit-title').value = title;
@@ -430,16 +466,12 @@
         }
 
         window.toggleCourseStatus = async function(id, currentStatus) {
-            await updateDoc(doc(db, "courses", id), {
-                isActive: !currentStatus
-            });
+            await updateDoc(doc(db, "courses", id), { isActive: !currentStatus });
             loadAdminData();
         };
 
         window.toggleCodeStatus = async function(id, currentStatus) {
-            await updateDoc(doc(db, "activation_codes", id), {
-                isDisabled: !currentStatus
-            });
+            await updateDoc(doc(db, "activation_codes", id), { isDisabled: !currentStatus });
             loadAdminData();
         };
 
@@ -457,29 +489,23 @@
             });
         };
 
-        window.toggleBlock = async function(userId, currentStatus) {
-            await updateDoc(doc(db, "users", userId), {
-                isBlocked: !currentStatus
-            });
+        // حظر جهاز الطالب أمنياً
+        window.toggleDeviceBlock = async function(userId, currentStatus) {
+            await updateDoc(doc(db, "users", userId), { deviceBlocked: !currentStatus });
             loadAdminData();
         };
 
+        // تصدير Excel باستخدام Blob المحدث والسليم
         document.getElementById('export-excel-btn')?.addEventListener('click', () => {
-            if (allStudentsData.length === 0) {
-                showModal("تنبيه", "لا توجد بيانات طلاب لتصديرها!", "rose");
-                return;
-            }
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "الاسم الرباعي,هاتف الطالب,هاتف الأب,هاتف الأم,الرقم القومي,المدرسة,المحافظة,السنة الدراسية\n";
-
+            if (allStudentsData.length === 0) { showModal("تنبيه", "لا توجد بيانات طلاب لتصديرها!", "rose"); return; }
+            let csvContent = "الاسم الرباعي,هاتف الطالب,هاتف الأب,هاتف الأم,الرقم القومي,المدرسة,المحافظة,السنة الدراسية\n";
             allStudentsData.forEach(st => {
-                let row = `"${st.fullName || ''}","${st.studentPhone || ''}","${st.fatherPhone || ''}","${st.motherPhone || ''}","${st.nationalId || ''}","${st.school || ''}","${st.governorate || ''}","${st.academicYear || ''}"`;
-                csvContent += row + "\n";
+                csvContent += `"${st.fullName || ''}","${st.studentPhone || ''}","${st.fatherPhone || ''}","${st.motherPhone || ''}","${st.nationalId || ''}","${st.school || ''}","${st.governorate || ''}","${st.academicYear || ''}"\n`;
             });
-
-            const encodedUri = encodeURI(csvContent);
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
+            link.setAttribute("href", url);
             link.setAttribute("download", "students_database.csv");
             document.body.appendChild(link);
             link.click();
