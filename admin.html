@@ -11,7 +11,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-    <!-- نافذة التنبيهات العامة بـ Z-Index عالي جداً -->
+    <!-- نافذة التنبيهات العامة -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -65,6 +65,50 @@
                 <div class="flex gap-3">
                     <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition">حفظ التعديل</button>
                     <button type="button" onclick="document.getElementById('edit-notif-modal').classList.add('hidden')" class="bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة تعديل سؤال الامتحان (المضافة حديثاً لمنع أي خطأ) -->
+    <div id="edit-quiz-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-pen text-indigo-400 ml-2"></i>تعديل سؤال الامتحان</h3>
+            <form id="edit-quiz-form" class="space-y-3">
+                <input type="hidden" id="edit-quiz-course-id">
+                <input type="hidden" id="edit-quiz-id">
+                <input type="text" id="edit-quiz-question" required placeholder="نص السؤال" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="edit-opt0" required placeholder="الخيار الأول" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
+                    <input type="text" id="edit-opt1" required placeholder="الخيار الثاني" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
+                    <input type="text" id="edit-opt2" required placeholder="الخيار الثالث" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
+                    <input type="text" id="edit-opt3" required placeholder="الخيار الرابع" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
+                </div>
+                <select id="edit-quiz-correct" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs">
+                    <option value="0">الإجابة الصحيحة: الخيار الأول</option>
+                    <option value="1">الإجابة الصحيحة: الخيار الثاني</option>
+                    <option value="2">الإجابة الصحيحة: الخيار الثالث</option>
+                    <option value="3">الإجابة الصحيحة: الخيار الرابع</option>
+                </select>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition">حفظ تعديل السؤال</button>
+                    <button type="button" onclick="document.getElementById('edit-quiz-modal').classList.add('hidden')" class="bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة تعديل الملف (المضافة حديثاً لمنع أي خطأ) -->
+    <div id="edit-file-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-pen text-rose-400 ml-2"></i>تعديل عنوان الملف</h3>
+            <form id="edit-file-form" class="space-y-4">
+                <input type="hidden" id="edit-file-course-id">
+                <input type="hidden" id="edit-file-id">
+                <input type="text" id="edit-file-title" required placeholder="عنوان الملف" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-rose-600 text-white font-bold py-3 rounded-xl">حفظ</button>
+                    <button type="button" onclick="document.getElementById('edit-file-modal').classList.add('hidden')" class="bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">إلغاء</button>
                 </div>
             </form>
         </div>
@@ -157,7 +201,7 @@
                     <header class="flex justify-between items-center pb-6 border-b border-slate-800">
                         <div>
                             <h1 class="text-2xl font-black text-white">لوحة تحكم المعلم المركزية</h1>
-                            <p class="text-slate-400 text-sm">نظام إدارة التعلم المتكامل (LMS) مع رفع ملفات PDF الآمنة</p>
+                            <p class="text-slate-400 text-sm">نظام إدارة التعلم المتكامل (LMS)</p>
                         </div>
                         <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition">تسجيل الخروج</button>
                     </header>
@@ -212,7 +256,7 @@
                         </div>
                     </div>
 
-                    <!-- رفع ملف PDF حقيقي + سؤال اختبار -->
+                    <!-- رفع ملف PDF + سؤال اختبار -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
                             <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-file-pdf text-rose-400 ml-2"></i>رفع ملف PDF للمحاضرة</h3>
@@ -220,12 +264,9 @@
                                 <select id="fileCourseSelect" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
                                     <option value="">اختر المحاضرة المستهدفة</option>
                                 </select>
-                                <input type="text" id="fileTitle" required placeholder="عنوان الملزمة (مثال: ملخص الباب الأول)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                                <div>
-                                    <label class="block text-xs text-slate-400 mb-1">اختر ملف PDF من جهازك:</label>
-                                    <input type="file" id="pdfFileInput" accept="application/pdf" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm file:bg-rose-600 file:text-white file:border-none file:rounded-lg file:px-4 file:py-2 file:cursor-pointer" />
-                                </div>
-                                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-3 rounded-xl transition">رفع وربط الملف بالمحاضرة</button>
+                                <input type="text" id="fileTitle" required placeholder="عنوان الملزمة" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                                <input type="file" id="pdfFileInput" accept="application/pdf" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm file:bg-rose-600 file:text-white file:border-none file:rounded-lg file:px-4 file:py-2 file:cursor-pointer" />
+                                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-3 rounded-xl transition">رفع وربط الملف</button>
                             </form>
                         </div>
 
@@ -257,22 +298,11 @@
                         </div>
                     </div>
 
-                    <!-- إدارة التنبيهات المنشورة -->
+                    <!-- إدارة التنبيهات -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bullhorn text-sky-400 ml-2"></i>التنبيهات المنشورة</h3>
-                            <div class="flex gap-3 w-full md:w-auto">
-                                <select id="filter-notif-target" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs flex-1 md:w-48">
-                                    <option value="all">كل الإشعارات</option>
-                                    <option value="all_years">جميع السنوات</option>
-                                    <option value="first">الصف الأول الثانوي</option>
-                                    <option value="second">الصف الثاني الثانوي</option>
-                                    <option value="third">الصف الثالث الثانوي</option>
-                                </select>
-                                <button onclick="window.deleteAllNotifications()" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition">
-                                    <i class="fa-solid fa-trash-can"></i> حذف الكل
-                                </button>
-                            </div>
+                            <button onclick="window.deleteAllNotifications()" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white font-bold px-4 py-2 rounded-xl text-xs transition">حذف الكل</button>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
@@ -291,22 +321,17 @@
                         </div>
                     </div>
 
-                    <!-- نتائج اختبارات الطلاب -->
+                    <!-- نتائج الطلاب -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-square-poll-vertical text-emerald-400 ml-2"></i>درجات ونتائج اختبارات الطلاب ومستوى التقدم</h3>
-                            <select id="filter-results-course" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs">
-                                <option value="all">جميع المحاضرات</option>
-                            </select>
-                        </div>
+                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-square-poll-vertical text-emerald-400 ml-2"></i>درجات ونتائج اختبارات الطلاب</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
-                                        <th class="p-3">اسم الطالب</th>
-                                        <th class="p-3">اسم المحاضرة</th>
+                                        <th class="p-3">الطالب</th>
+                                        <th class="p-3">المحاضرة</th>
                                         <th class="p-3">الدرجة</th>
-                                        <th class="p-3">تقييم مستوى التقدم</th>
+                                        <th class="p-3">التقييم</th>
                                         <th class="p-3">إعادة الامتحان</th>
                                         <th class="p-3">الإجراء</th>
                                     </tr>
@@ -318,15 +343,15 @@
                         </div>
                     </div>
 
-                    <!-- طلبات تعديل البيانات -->
+                    <!-- طلبات التعديل -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-pen text-amber-400 ml-2"></i>طلبات تعديل بيانات الطلاب المعلقة</h3>
+                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-pen text-amber-400 ml-2"></i>طلبات تعديل البيانات</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
-                                        <th class="p-3">اسم الطالب الحالي</th>
-                                        <th class="p-3">البيانات الجديدة المطلوبة</th>
+                                        <th class="p-3">الطالب</th>
+                                        <th class="p-3">البيانات الجديدة</th>
                                         <th class="p-3">الإجراء</th>
                                     </tr>
                                 </thead>
@@ -339,37 +364,21 @@
 
                     <!-- إدارة المحاضرات -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-book-open text-sky-400 ml-2"></i>إدارة المحاضرات المنشورة</h3>
-                            <select id="filter-year" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs">
-                                <option value="all">جميع السنوات الدراسية</option>
-                                <option value="first">الصف الأول الثانوي</option>
-                                <option value="second">الصف الثاني الثانوي</option>
-                                <option value="third">الصف الثالث الثانوي</option>
-                            </select>
-                        </div>
+                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-book-open text-sky-400 ml-2"></i>إدارة المحاضرات المنشورة</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="admin-courses-grid">
                             <p class="text-slate-500">جاري التحميل...</p>
                         </div>
                     </div>
 
-                    <!-- إدارة الأكواد والطلاب -->
+                    <!-- الأكواد والطلاب -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check text-sky-400 ml-2"></i>إدارة الأكواد</h3>
-                            <select id="filter-code-status" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs">
-                                <option value="all">جميع الأكواد</option>
-                                <option value="available">المتاحة</option>
-                                <option value="used">المستخدمة</option>
-                                <option value="disabled">المعطلة</option>
-                            </select>
-                        </div>
+                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check text-sky-400 ml-2"></i>إدارة الأكواد</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
-                                        <th class="p-3">الكود السري</th>
-                                        <th class="p-3">يتبع المحاضرة</th>
+                                        <th class="p-3">الكود</th>
+                                        <th class="p-3">المحاضرة</th>
                                         <th class="p-3">الحالة</th>
                                         <th class="p-3">مستخدم بواسطة</th>
                                         <th class="p-3">إجراءات</th>
@@ -383,25 +392,20 @@
                     </div>
 
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex justify-between items-center">
                             <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>سجل الطلاب</h3>
-                            <div class="flex gap-3 w-full md:w-auto">
-                                <input type="text" id="student-search" placeholder="ابحث بالاسم أو الهاتف أو الرقم القومي..." class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs flex-1 md:w-72" />
-                                <button id="export-excel-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition cursor-pointer">
-                                    <i class="fa-solid fa-file-excel"></i> تنزيل Excel
-                                </button>
-                            </div>
+                            <button id="export-excel-btn" class="bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs">تنزيل Excel</button>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
-                                        <th class="p-3">الاسم الرباعي</th>
+                                        <th class="p-3">الاسم</th>
                                         <th class="p-3">الهواتف</th>
                                         <th class="p-3">الرقم القومي</th>
-                                        <th class="p-3">المدرسة / المحافظة</th>
+                                        <th class="p-3">المدرسة</th>
                                         <th class="p-3">السنة</th>
-                                        <th class="p-3">التحكم الأمني</th>
+                                        <th class="p-3">تحكم أمني</th>
                                     </tr>
                                 </thead>
                                 <tbody id="students-table-body">
@@ -453,12 +457,8 @@
                 const title = document.getElementById('fileTitle').value;
                 const fileInput = document.getElementById('pdfFileInput');
                 
-                if (!fileInput.files[0]) {
-                    showModal("تنبيه", "الرجاء اختيار ملف PDF!", "rose");
-                    return;
-                }
-
-                showModal("جاري الرفع", "يتم الآن رفع ملف PDF السحابي...", "sky");
+                if (!fileInput.files[0]) { showModal("تنبيه", "اختر ملف PDF!", "rose"); return; }
+                showModal("جاري الرفع", "يتم رفع الملف...", "sky");
 
                 try {
                     const file = fileInput.files[0];
@@ -471,10 +471,10 @@
                     currentFiles.push({ id: Date.now().toString(), title, url: fileUrl });
                     await updateDoc(doc(db, "courses", courseId), { files: currentFiles });
                     
-                    showModal("تم بنجاح", "تم رفع وإرفاق ملف PDF بنجاح!");
+                    showModal("تم بنجاح", "تم رفع الملف بنجاح!");
                     document.getElementById('file-form').reset();
                 } catch (err) {
-                    showModal("خطأ", "فشل رفع الملف: " + err.message, "rose");
+                    showModal("خطأ", "فشل الرفع: " + err.message, "rose");
                 }
             });
 
@@ -485,7 +485,7 @@
                 const question = document.getElementById('quizQuestion').value;
                 const options = [
                     document.getElementById('opt0').value, document.getElementById('opt1').value,
-                    document.getElementById('opt2').value, document.getElementById('opt3'].value
+                    document.getElementById('opt2').value, document.getElementById('opt3').value
                 ];
                 const correct = parseInt(document.getElementById('quizCorrect').value);
 
@@ -522,7 +522,6 @@
                 showModal("تم بنجاح", "تم التعديل بنجاح!");
             });
 
-            // حفظ تعديل السؤال
             document.getElementById('edit-quiz-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const courseId = document.getElementById('edit-quiz-course-id').value;
@@ -558,12 +557,6 @@
                     document.body.appendChild(link); link.click(); document.body.removeChild(link);
                 } catch (err) { showModal("خطأ", "حدث خطأ: " + err.message, "rose"); }
             });
-
-            document.getElementById('filter-year').addEventListener('change', renderAdminUI);
-            document.getElementById('filter-code-status').addEventListener('change', renderAdminUI);
-            document.getElementById('filter-notif-target').addEventListener('change', renderAdminUI);
-            document.getElementById('filter-results-course').addEventListener('change', renderAdminUI);
-            document.getElementById('student-search').addEventListener('input', renderAdminUI);
 
             setupAdminRealtimeData();
         }
@@ -615,7 +608,6 @@
             const quizSelect = document.getElementById('quizCourseSelect');
             const resultsCourseFilter = document.getElementById('filter-results-course');
             const coursesGrid = document.getElementById('admin-courses-grid');
-            const yearFilter = document.getElementById('filter-year')?.value || 'all';
 
             if (!coursesGrid) return;
 
@@ -636,51 +628,49 @@
                 quizSelectHtml += `<option value="${c.id}">${c.title}</option>`;
                 resultsFilterHtml += `<option value="${c.id}">${c.title}</option>`;
 
-                if (yearFilter === 'all' || c.academicYear === yearFilter) {
-                    let filesListHtml = (c.files || []).map(f => `
-                        <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
-                            <span class="truncate max-w-[150px] text-rose-300">${f.title}</span>
-                            <button onclick="window.deleteCourseFile('${c.id}', '${f.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد ملفات</span>';
+                let filesListHtml = (c.files || []).map(f => `
+                    <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
+                        <span class="truncate max-w-[150px] text-rose-300">${f.title}</span>
+                        <button onclick="window.deleteCourseFile('${c.id}', '${f.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد ملفات</span>';
 
-                    let quizListHtml = (c.quiz || []).map((q, qIdx) => `
-                        <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
-                            <span class="truncate max-w-[130px] text-indigo-300">س${qIdx+1}: ${q.question}</span>
-                            <div class="flex gap-2">
-                                <button onclick="window.openEditQuizModal('${c.id}', '${q.id}', '${q.question}', ${q.correct}, ${JSON.stringify(q.options).replace(/"/g, '&quot;')})" class="text-sky-400 hover:text-white"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="window.deleteQuizQuestion('${c.id}', '${q.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
-                            </div>
+                let quizListHtml = (c.quiz || []).map((q, qIdx) => `
+                    <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
+                        <span class="truncate max-w-[120px] text-indigo-300">س${qIdx+1}: ${q.question}</span>
+                        <div class="flex gap-2">
+                            <button onclick="window.openEditQuizModal('${c.id}', '${q.id}', '${q.question}', ${q.correct}, ${JSON.stringify(q.options).replace(/"/g, '&quot;')})" class="text-sky-400 hover:text-white"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="window.deleteQuizQuestion('${c.id}', '${q.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                    `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد أسئلة</span>';
+                    </div>
+                `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد أسئلة</span>';
 
-                    coursesHtml += `
-                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3">
-                            <div>
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
-                                    <span class="text-xs px-2 py-0.5 rounded-md font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${isActive ? 'نشطة' : 'متوقفة'}</span>
-                                </div>
-                                <h4 class="text-base font-bold text-white">${c.title}</h4>
-                                <p class="text-slate-400 text-xs mt-1">السنة: ${yearText} | الوقت: ${c.quizDuration || 10} د</p>
-                                <div class="mt-3 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الملفات:</p><div class="max-h-24 overflow-y-auto">${filesListHtml}</div></div>
-                                <div class="mt-2 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الامتحان (تعديل/حذف):</p><div class="max-h-24 overflow-y-auto">${quizListHtml}</div></div>
+                coursesHtml += `
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
+                                <span class="text-xs px-2 py-0.5 rounded-md font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${isActive ? 'نشطة' : 'متوقفة'}</span>
                             </div>
-                            <div class="grid grid-cols-3 gap-2 pt-2">
-                                <button onclick="window.openEditModal('${c.id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold">تعديل</button>
-                                <button onclick="window.toggleCourseStatus('${c.id}', ${isActive})" class="bg-slate-800 text-xs py-2 rounded-xl font-bold">${isActive ? 'إيقاف' : 'تشغيل'}</button>
-                                <button onclick="window.deleteCourse('${c.id}')" class="bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold">حذف</button>
-                            </div>
+                            <h4 class="text-base font-bold text-white">${c.title}</h4>
+                            <p class="text-slate-400 text-xs mt-1">السنة: ${yearText} | الوقت: ${c.quizDuration || 10} د</p>
+                            <div class="mt-3 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الملفات:</p><div class="max-h-24 overflow-y-auto">${filesListHtml}</div></div>
+                            <div class="mt-2 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الامتحان (تعديل/حذف):</p><div class="max-h-24 overflow-y-auto">${quizListHtml}</div></div>
                         </div>
-                    `;
-                }
+                        <div class="grid grid-cols-3 gap-2 pt-2">
+                            <button onclick="window.openEditModal('${c.id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold">تعديل</button>
+                            <button onclick="window.toggleCourseStatus('${c.id}', ${isActive})" class="bg-slate-800 text-xs py-2 rounded-xl font-bold">${isActive ? 'إيقاف' : 'تشغيل'}</button>
+                            <button onclick="window.deleteCourse('${c.id}')" class="bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold">حذف</button>
+                        </div>
+                    </div>
+                `;
             });
 
             if(select) select.innerHTML = selectHtml;
             if(fileSelect) fileSelect.innerHTML = fileSelectHtml;
             if(quizSelect) quizSelect.innerHTML = quizSelectHtml;
             if(resultsCourseFilter && resultsCourseFilter.options.length <= 1) resultsCourseFilter.innerHTML = resultsFilterHtml;
-            if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات مطابقة</p>';
+            if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات</p>';
 
             const reqTbody = document.getElementById('requests-table-body');
             let reqHtml = '';
@@ -689,7 +679,7 @@
                     reqHtml += `
                         <tr class="border-b border-slate-800/60">
                             <td class="p-3 font-bold text-white">${req.currentName}</td>
-                            <td class="p-3 text-xs space-y-1">الاسم: <span class="text-sky-400">${req.newFullName}</span><br>هاتف: <span class="text-sky-400">${req.newStudentPhone}</span></td>
+                            <td class="p-3 text-xs">الاسم: ${req.newFullName} | هاتف: ${req.newStudentPhone}</td>
                             <td class="p-3 flex gap-2">
                                 <button onclick="window.approveRequest('${req.id}', '${req.userId}', '${req.newFullName}', '${req.newStudentPhone}', '${req.newFatherPhone}', '${req.newMotherPhone}', '${req.newSchool}', '${req.newGovernorate}')" class="bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold text-white">موافقة</button>
                                 <button onclick="window.rejectRequest('${req.id}', '${req.userId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold">رفض</button>
@@ -704,108 +694,76 @@
             adminUsers.forEach(st => { studentsMap[st.id] = `${st.fullName || 'بدون اسم'} / ${st.studentPhone || '-'}`; });
 
             const studentsTbody = document.getElementById('students-table-body');
-            const searchTerm = document.getElementById('student-search')?.value.toLowerCase() || '';
             let studentsHtml = '';
             adminUsers.forEach(st => {
-                const fullName = (st.fullName || '').toLowerCase();
-                const phone = (st.studentPhone || '').toLowerCase();
-                const nationalId = (st.nationalId || '').toLowerCase();
-                if (searchTerm === '' || fullName.includes(searchTerm) || phone.includes(searchTerm) || nationalId.includes(searchTerm)) {
-                    const isDeviceBlocked = st.deviceBlocked || false;
-                    studentsHtml += `
-                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                            <td class="p-3 font-bold text-white">${st.fullName}</td>
-                            <td class="p-3 text-xs">طالب: <span class="font-mono text-sky-400">${st.studentPhone || '-'}</span></td>
-                            <td class="p-3 font-mono text-xs">${st.nationalId || '-'}</td>
-                            <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
-                            <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث' : st.academicYear === 'second' ? 'الثاني' : 'الأول'} الثانوي</td>
-                            <td class="p-3 flex items-center gap-2">
-                                ${isDeviceBlocked ? '<span class="text-rose-400 text-xs font-bold">محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">مسموح</span>'}
-                                <button onclick="window.toggleDeviceBlock('${st.id}', ${isDeviceBlocked})" class="bg-slate-800 text-xs px-3 py-1.5 rounded-lg font-bold">${isDeviceBlocked ? 'رفع الحظر' : 'حظر الجهاز'}</button>
-                            </td>
-                        </tr>
-                    `;
-                }
+                const isDeviceBlocked = st.deviceBlocked || false;
+                studentsHtml += `
+                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">${st.fullName}</td>
+                        <td class="p-3 text-xs">طالب: ${st.studentPhone || '-'}</td>
+                        <td class="p-3 font-mono text-xs">${st.nationalId || '-'}</td>
+                        <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
+                        <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث' : st.academicYear === 'second' ? 'الثاني' : 'الأول'} الثانوي</td>
+                        <td class="p-3"><button onclick="window.toggleDeviceBlock('${st.id}', ${isDeviceBlocked})" class="bg-slate-800 text-xs px-3 py-1.5 rounded-lg font-bold">${isDeviceBlocked ? 'رفع الحظر' : 'حظر'}</button></td>
+                    </tr>
+                `;
             });
-            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مطابقة</td></tr>';
+            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد طلاب</td></tr>';
 
             const codesTbody = document.getElementById('codes-table-body');
-            const codeStatusFilter = document.getElementById('filter-code-status')?.value || 'all';
             let codesHtml = '';
             adminCodes.forEach(codeObj => {
                 const courseInfo = coursesMap[codeObj.courseId] || { title: 'محاضرة محذوفة', year: '-' };
                 const courseLabel = `${courseInfo.title} / ${courseInfo.year}`;
                 const isDisabled = codeObj.isDisabled || false;
                 const isUsed = codeObj.isUsed || false;
-                let matchesFilter = true;
-                if (codeStatusFilter === 'available' && (isUsed || isDisabled)) matchesFilter = false;
-                if (codeStatusFilter === 'used' && !isUsed) matchesFilter = false;
-                if (codeStatusFilter === 'disabled' && !isDisabled) matchesFilter = false;
-
-                if (matchesFilter) {
-                    const studentDetails = codeObj.usedBy ? (studentsMap[codeObj.usedBy] || codeObj.usedBy) : 'لا يوجد';
-                    codesHtml += `
-                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                            <td class="p-3 font-mono text-amber-400 font-bold">${codeObj.code}</td>
-                            <td class="p-3 text-xs text-sky-300 font-semibold">${courseLabel}</td>
-                            <td class="p-3">${isUsed ? '<span class="bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-lg text-xs font-bold">مستخدم</span>' : (isDisabled ? '<span class="bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-bold">معطل</span>' : '<span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-lg text-xs font-bold">متاح</span>')}</td>
-                            <td class="p-3 text-xs text-slate-300">${studentDetails}</td>
-                            <td class="p-3 flex gap-2">
-                                <button onclick="window.toggleCodeStatus('${codeObj.id}', ${isDisabled})" class="bg-slate-800 px-3 py-1 rounded-lg text-xs font-bold">${isDisabled ? 'تفعيل' : 'تعطيل'}</button>
-                                <button onclick="window.deleteCode('${codeObj.id}', '${codeObj.usedBy || ''}', '${codeObj.courseId || ''}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
-                            </td>
-                        </tr>
-                    `;
-                }
+                const studentDetails = codeObj.usedBy ? (studentsMap[codeObj.usedBy] || codeObj.usedBy) : 'لا يوجد';
+                codesHtml += `
+                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                        <td class="p-3 font-mono text-amber-400 font-bold">${codeObj.code}</td>
+                        <td class="p-3 text-xs text-sky-300">${courseLabel}</td>
+                        <td class="p-3">${isUsed ? 'مستخدم' : (isDisabled ? 'معطل' : 'متاح')}</td>
+                        <td class="p-3 text-xs text-slate-300">${studentDetails}</td>
+                        <td class="p-3 flex gap-2">
+                            <button onclick="window.toggleCodeStatus('${codeObj.id}', ${isDisabled})" class="bg-slate-800 px-3 py-1 rounded-lg text-xs font-bold">${isDisabled ? 'تفعيل' : 'تعطيل'}</button>
+                            <button onclick="window.deleteCode('${codeObj.id}', '${codeObj.usedBy || ''}', '${codeObj.courseId || ''}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
+                        </td>
+                    </tr>
+                `;
             });
-            if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد أكواد مطابقة</td></tr>';
+            if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد أكواد</td></tr>';
 
             const notifBody = document.getElementById('admin-notifications-body');
-            const notifFilter = document.getElementById('filter-notif-target')?.value || 'all';
             let notifHtml = '';
             adminNotifications.forEach(n => {
-                const targetText = n.targetYear === 'all' ? 'جميع السنوات' : (n.targetYear === 'third' ? 'الثالث الثانوي' : n.targetYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي');
-                let matchesNotifFilter = true;
-                if (notifFilter === 'all_years' && n.targetYear !== 'all') matchesNotifFilter = false;
-                if (notifFilter !== 'all' && notifFilter !== 'all_years' && n.targetYear !== notifFilter) matchesNotifFilter = false;
-
-                if (matchesNotifFilter) {
-                    notifHtml += `
-                        <tr class="border-b border-slate-800/60">
-                            <td class="p-3 font-bold text-white">${n.title}</td>
-                            <td class="p-3 text-xs text-sky-400">${targetText}</td>
-                            <td class="p-3 text-xs truncate max-w-xs">${n.message}</td>
-                            <td class="p-3 flex gap-2">
-                                <button onclick="window.openEditNotifModal('${n.id}', '${n.title}', '${n.targetYear}', '${n.message}')" class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-xs font-bold">تعديل</button>
-                                <button onclick="window.deleteNotification('${n.id}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
-                            </td>
-                        </tr>
-                    `;
-                }
+                notifHtml += `
+                    <tr class="border-b border-slate-800/60">
+                        <td class="p-3 font-bold text-white">${n.title}</td>
+                        <td class="p-3 text-xs text-sky-400">${n.targetYear}</td>
+                        <td class="p-3 text-xs truncate max-w-xs">${n.message}</td>
+                        <td class="p-3"><button onclick="window.deleteNotification('${n.id}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button></td>
+                    </tr>
+                `;
             });
             if(notifBody) notifBody.innerHTML = notifHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد تنبيهات</td></tr>';
 
             const resultsBody = document.getElementById('quiz-results-body');
-            const courseFilterId = document.getElementById('filter-results-course')?.value || 'all';
             let resHtml = '';
             adminResults.forEach(r => {
                 const canRetake = r.canRetake || false;
-                if (courseFilterId === 'all' || r.courseId === courseFilterId) {
-                    const percentage = Math.round((r.score / r.total) * 100);
-                    let evaluation = percentage >= 85 ? 'ممتاز' : percentage >= 65 ? 'جيد جداً' : percentage >= 50 ? 'مقبول' : 'راسب';
-                    resHtml += `
-                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                            <td class="p-3 font-bold text-white">${r.studentName}</td>
-                            <td class="p-3 text-xs text-sky-400">${r.courseTitle}</td>
-                            <td class="p-3 font-mono font-bold text-amber-400">${r.score} / ${r.total} (${percentage}%)</td>
-                            <td class="p-3"><span class="text-xs px-2.5 py-1 rounded-lg border font-bold">${evaluation}</span></td>
-                            <td class="p-3"><button onclick="window.toggleQuizRetake('${r.id}', ${canRetake})" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${canRetake ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}">${canRetake ? 'مسموح بالإعادة' : 'السماح بالإعادة'}</button></td>
-                            <td class="p-3"><button onclick="window.deleteQuizResult('${r.id}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button></td>
-                        </tr>
-                    `;
-                }
+                const percentage = Math.round((r.score / r.total) * 100);
+                resHtml += `
+                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">${r.studentName}</td>
+                        <td class="p-3 text-xs text-sky-400">${r.courseTitle}</td>
+                        <td class="p-3 font-mono font-bold text-amber-400">${r.score} / ${r.total} (${percentage}%)</td>
+                        <td class="p-3"><span class="text-xs px-2.5 py-1 rounded-lg border font-bold">${percentage >= 50 ? 'ناجح' : 'راسب'}</span></td>
+                        <td class="p-3"><button onclick="window.toggleQuizRetake('${r.id}', ${canRetake})" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${canRetake ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}">${canRetake ? 'مسموح بالإعادة' : 'السماح بالإعادة'}</button></td>
+                        <td class="p-3"><button onclick="window.deleteQuizResult('${r.id}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button></td>
+                    </tr>
+                `;
             });
-            if(resultsBody) resultsBody.innerHTML = resHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مسجلة</td></tr>';
+            if(resultsBody) resultsBody.innerHTML = resHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج</td></tr>';
         }
 
         window.openEditQuizModal = function(courseId, qId, question, correct, options) {
@@ -845,7 +803,7 @@
         };
 
         window.deleteQuizResult = async function(resultId) {
-            showModal("تأكيد الحذف", "حذف هذه النتيجة؟", "rose", async () => { await deleteDoc(doc(db, "quiz_results", resultId)); });
+            showModal("تأكيد الحذف", "حذف النتيجة؟", "rose", async () => { await deleteDoc(doc(db, "quiz_results", resultId)); });
         };
 
         window.deleteAllNotifications = async function() {
@@ -863,14 +821,6 @@
             document.getElementById('edit-videoUrl').value = videoUrl;
             document.getElementById('edit-description').value = description;
             document.getElementById('edit-modal').classList.remove('hidden');
-        }
-
-        window.openEditNotifModal = function(id, title, targetYear, message) {
-            document.getElementById('edit-notif-id').value = id;
-            document.getElementById('edit-notif-title').value = title;
-            document.getElementById('edit-notif-target').value = targetYear;
-            document.getElementById('edit-notif-msg').value = message;
-            document.getElementById('edit-notif-modal').classList.remove('hidden');
         }
 
         window.toggleCourseStatus = async function(id, currentStatus) {
