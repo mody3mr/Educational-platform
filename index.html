@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    <!-- نافذة إدخال كود التفعيل -->
+    <!-- نافذة إدخال كود التفعيل المحدثة لعدم التداخل -->
     <div id="activation-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div class="w-14 h-14 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -85,7 +85,7 @@
         </div>
     </div>
 
-    <!-- نافذة الإشعارات وقراءتها -->
+    <!-- نافذة الإشعارات وقراءتها لإطفاء الجرس -->
     <div id="notifications-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
@@ -168,7 +168,7 @@
         document.getElementById('submit-code-btn').addEventListener('click', () => {
             const code = document.getElementById('activation-code-input').value.trim();
             if (!code) { showModal("تنبيه", "الرجاء إدخال الكود!", "rose"); return; }
-            closeActivationModal();
+            closeActivationModal(); // إغلاق نافذة إدخال الكود فوراً لكي تظهر رسالة الخطأ بوضوح لو حدث خطأ
             verifyAndUnlockCode(code, currentActiveCourseId, currentUserId);
         });
 
@@ -278,7 +278,6 @@
         function renderDashboard(user, userData) {
             appDiv.innerHTML = `
                 <div class="min-h-screen flex flex-col md:flex-row">
-                    <!-- القائمة الجانبية المحدثة بالكامل -->
                     <aside class="w-full md:w-72 bg-slate-900 border-l border-slate-800 p-6 hidden md:flex flex-col justify-between">
                         <div>
                             <div class="flex items-center gap-3 mb-10 px-2">
@@ -478,7 +477,6 @@
             }
         }
 
-        // تسجيل الإشعار كمقروء عند الضغط عليه
         window.markNotificationRead = async function(notifId) {
             const user = auth.currentUser;
             if(!user) return;
