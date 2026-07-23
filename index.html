@@ -16,7 +16,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-sky-500 selection:text-slate-950">
 
-    <!-- نافذة منبثقة مخصصة للتنبيهات -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -28,7 +27,7 @@
         </div>
     </div>
 
-    <!-- نافذة مخصصة لإدخال كود التفعيل -->
+    <!-- نافذة إدخال كود التفعيل -->
     <div id="activation-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div class="w-14 h-14 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -86,13 +85,14 @@
         </div>
     </div>
 
-    <!-- نافذة قائمة التنبيهات (الإشعارات) -->
+    <!-- نافذة الإشعارات وقراءتها -->
     <div id="notifications-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
                 <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>التنبيهات والإشعارات</h3>
                 <button onclick="closeNotificationsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
+            <p class="text-slate-400 text-xs mb-3">اضغط على أي إشعار لتسجيله كمقروء وإطفاء التنبيه:</p>
             <div id="notifications-list" class="space-y-3">
                 <p class="text-slate-400 text-xs text-center py-4">لا توجد تنبيهات جديدة.</p>
             </div>
@@ -267,6 +267,7 @@
                     governorate: document.getElementById('governorate').value,
                     academicYear: document.getElementById('academicYear').value,
                     unlockedCourses: [],
+                    readNotifications: [],
                     deviceBlocked: false
                 };
 
@@ -277,7 +278,7 @@
         function renderDashboard(user, userData) {
             appDiv.innerHTML = `
                 <div class="min-h-screen flex flex-col md:flex-row">
-                    <!-- القائمة الجانبية المحدثة -->
+                    <!-- القائمة الجانبية المحدثة بالكامل -->
                     <aside class="w-full md:w-72 bg-slate-900 border-l border-slate-800 p-6 hidden md:flex flex-col justify-between">
                         <div>
                             <div class="flex items-center gap-3 mb-10 px-2">
@@ -311,13 +312,11 @@
                             </div>
                             
                             <div class="flex items-center gap-3">
-                                <!-- زر جرس التنبيهات -->
                                 <button onclick="openNotificationsModal()" class="relative bg-slate-900 border border-slate-800 w-11 h-11 rounded-2xl flex items-center justify-center text-sky-400 hover:border-sky-500 transition">
                                     <i class="fa-solid fa-bell"></i>
                                     <span id="notif-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[10px] text-white flex items-center justify-center hidden">!</span>
                                 </button>
 
-                                <!-- قائمة الإعدادات المنسدلة -->
                                 <div class="relative">
                                     <button id="menu-btn" class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl hover:border-sky-500 transition">
                                         <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">${userData.fullName.charAt(0)}</div>
@@ -354,7 +353,6 @@
 
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-            // الاستماع الحي للتنبيهات والكورسات
             onSnapshot(collection(db, "courses"), (coursesSnap) => {
                 onSnapshot(collection(db, "activation_codes"), (codesSnap) => {
                     onSnapshot(collection(db, "notifications"), (notifSnap) => {
@@ -401,21 +399,29 @@
             const notifList = document.getElementById('notifications-list');
             const notifBadge = document.getElementById('notif-badge');
 
-            // عرض التنبيهات الخاصة بالسنة أو الخاصة بالطالب نفسه
             let notifHtml = '';
             let unreadCount = 0;
+            const readList = userData.readNotifications || [];
+
             notifSnap.forEach(docSnap => {
                 const n = docSnap.data();
+                const nId = docSnap.id;
+                const isRead = readList.includes(nId);
+
                 if (n.targetYear === 'all' || n.targetYear === userData.academicYear || n.targetUserId === userId) {
-                    unreadCount++;
+                    if (!isRead) unreadCount++;
                     notifHtml += `
-                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3">
-                            <h4 class="text-xs font-bold text-sky-400 mb-1">${n.title}</h4>
+                        <div onclick="window.markNotificationRead('${nId}')" class="bg-slate-950 border ${isRead ? 'border-slate-800 opacity-60' : 'border-sky-500/50'} rounded-2xl p-3 cursor-pointer hover:border-sky-500 transition">
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="text-xs font-bold text-sky-400">${n.title}</h4>
+                                ${!isRead ? '<span class="w-2 h-2 bg-sky-500 rounded-full animate-pulse"></span>' : '<span class="text-[10px] text-slate-500">مقروء</span>'}
+                            </div>
                             <p class="text-slate-300 text-xs leading-relaxed">${n.message}</p>
                         </div>
                     `;
                 }
             });
+
             if(notifList) notifList.innerHTML = notifHtml || '<p class="text-slate-400 text-xs text-center py-4">لا توجد تنبيهات حالياً.</p>';
             if(notifBadge) {
                 if(unreadCount > 0) notifBadge.classList.remove('hidden');
@@ -457,7 +463,7 @@
                                             <i class="fa-solid fa-play"></i> مشاهدة المحاضرة
                                         </button>
                                     `) : `
-                                        <button onclick="window.openActivationModal('${courseId}', '${userId}')" class="w-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-slate-950 transition">
+                                        <button onclick="window.openActivationModal('${courseId}', '${auth.currentUser.uid}')" class="w-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-slate-950 transition">
                                             <i class="fa-solid fa-lock"></i> أدخل كود التفعيل
                                         </button>
                                     `}
@@ -470,6 +476,15 @@
             } catch (err) {
                 grid.innerHTML = '<p class="text-rose-400">حدث خطأ في تحميل المحاضرات.</p>';
             }
+        }
+
+        // تسجيل الإشعار كمقروء عند الضغط عليه
+        window.markNotificationRead = async function(notifId) {
+            const user = auth.currentUser;
+            if(!user) return;
+            await updateDoc(doc(db, "users", user.uid), {
+                readNotifications: arrayUnion(notifId)
+            });
         }
 
         async function verifyAndUnlockCode(code, courseId, userId) {
