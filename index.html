@@ -28,14 +28,14 @@
         </div>
     </div>
 
-    <!-- نافذة مخصصة لإدخال كود التفعيل بدلاً من رسالة المتصفح -->
+    <!-- نافذة مخصصة لإدخال كود التفعيل -->
     <div id="activation-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div class="w-14 h-14 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
                 <i class="fa-solid fa-key"></i>
             </div>
             <h3 class="text-lg font-bold text-white mb-2">تفعيل المحاضرة</h3>
-            <p class="text-slate-400 text-sm mb-4">أدخل كود التفعيل المكون من 6 أرقام الخاص بهذه المحاضرة:</p>
+            <p class="text-slate-400 text-sm mb-4">أدخل كود التفعيل المكون من 6 أرقام:</p>
             <input type="text" id="activation-code-input" placeholder="مثال: 366287" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-center font-mono font-bold tracking-widest text-lg mb-4 outline-none focus:border-amber-500" />
             <div class="flex gap-2">
                 <button id="submit-code-btn" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition">تفعيل</button>
@@ -86,6 +86,19 @@
         </div>
     </div>
 
+    <!-- نافذة قائمة التنبيهات (الإشعارات) -->
+    <div id="notifications-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>التنبيهات والإشعارات</h3>
+                <button onclick="closeNotificationsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="notifications-list" class="space-y-3">
+                <p class="text-slate-400 text-xs text-center py-4">لا توجد تنبيهات جديدة.</p>
+            </div>
+        </div>
+    </div>
+
     <div id="app">
         <div class="flex items-center justify-center min-h-screen">
             <div class="flex flex-col items-center gap-4">
@@ -114,7 +127,6 @@
         const db = getFirestore(app);
         const appDiv = document.getElementById('app');
 
-        // منع السكرين شوت وفحص الشاشة
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
             if (e.key === 'PrintScreen' || (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
@@ -140,6 +152,8 @@
         window.closeModal = function() { document.getElementById('custom-modal').classList.add('hidden'); }
         window.closeActivationModal = function() { document.getElementById('activation-modal').classList.add('hidden'); }
         window.closeSettingsModal = function() { document.getElementById('settings-modal').classList.add('hidden'); }
+        window.closeNotificationsModal = function() { document.getElementById('notifications-modal').classList.add('hidden'); }
+        window.openNotificationsModal = function() { document.getElementById('notifications-modal').classList.remove('hidden'); }
 
         let currentActiveCourseId = null;
         let currentUserId = null;
@@ -160,7 +174,6 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // استماع فوري لتغيرات مستند الطالب (عشان لو تم حظره أو تحديث بياناته تسمع فوراً)
                 onSnapshot(doc(db, "users", user.uid), (userSnap) => {
                     if (userSnap.exists()) {
                         const userData = userSnap.data();
@@ -264,6 +277,7 @@
         function renderDashboard(user, userData) {
             appDiv.innerHTML = `
                 <div class="min-h-screen flex flex-col md:flex-row">
+                    <!-- القائمة الجانبية المحدثة -->
                     <aside class="w-full md:w-72 bg-slate-900 border-l border-slate-800 p-6 hidden md:flex flex-col justify-between">
                         <div>
                             <div class="flex items-center gap-3 mb-10 px-2">
@@ -279,6 +293,12 @@
                                 <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold bg-sky-500 text-slate-950">
                                     <i class="fa-solid fa-play-circle"></i> كورساتي المفعلة
                                 </a>
+                                <a href="#" onclick="showModal('الاختبارات', 'قسم الاختبارات والواجبات قادم قريباً!', 'sky')" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 transition">
+                                    <i class="fa-solid fa-clipboard-question"></i> الاختبارات والواجبات
+                                </a>
+                                <a href="#" onclick="showModal('الملفات الدراسية', 'قسم الملفات والملخصات الدراسية قريباً!', 'sky')" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800 transition">
+                                    <i class="fa-solid fa-file-pdf"></i> الملفات الدراسية
+                                </a>
                             </nav>
                         </div>
                     </aside>
@@ -290,20 +310,29 @@
                                 <p class="text-slate-400 text-sm mt-1">السنة الدراسية: <span class="text-sky-400 font-bold">${userData.academicYear === 'third' ? 'الثالث الثانوي' : userData.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي'}</span></p>
                             </div>
                             
-                            <div class="relative">
-                                <button id="menu-btn" class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl hover:border-sky-500 transition">
-                                    <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">${userData.fullName.charAt(0)}</div>
-                                    <span class="text-sm font-bold text-white hidden md:inline">${userData.fullName.split(' ')[0]}</span>
-                                    <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+                            <div class="flex items-center gap-3">
+                                <!-- زر جرس التنبيهات -->
+                                <button onclick="openNotificationsModal()" class="relative bg-slate-900 border border-slate-800 w-11 h-11 rounded-2xl flex items-center justify-center text-sky-400 hover:border-sky-500 transition">
+                                    <i class="fa-solid fa-bell"></i>
+                                    <span id="notif-badge" class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full text-[10px] text-white flex items-center justify-center hidden">!</span>
                                 </button>
-                                <div id="dropdown-menu" class="hidden absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50">
-                                    <button onclick="openSettingsModal('${userData.fullName}', '${userData.studentPhone}', '${userData.fatherPhone}', '${userData.motherPhone}', '${userData.school}', '${userData.governorate}')" class="w-full text-right block px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800">
-                                        <i class="fa-solid fa-gear ml-2"></i> الإعدادات الشخصية
+
+                                <!-- قائمة الإعدادات المنسدلة -->
+                                <div class="relative">
+                                    <button id="menu-btn" class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl hover:border-sky-500 transition">
+                                        <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">${userData.fullName.charAt(0)}</div>
+                                        <span class="text-sm font-bold text-white hidden md:inline">${userData.fullName.split(' ')[0]}</span>
+                                        <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
                                     </button>
-                                    <div class="border-t border-slate-800 my-1"></div>
-                                    <button id="logout-btn" class="w-full text-right block px-4 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10">
-                                        <i class="fa-solid fa-right-from-bracket ml-2"></i> تسجيل الخروج
-                                    </button>
+                                    <div id="dropdown-menu" class="hidden absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50">
+                                        <button onclick="openSettingsModal('${userData.fullName}', '${userData.studentPhone}', '${userData.fatherPhone}', '${userData.motherPhone}', '${userData.school}', '${userData.governorate}')" class="w-full text-right block px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800">
+                                            <i class="fa-solid fa-gear ml-2"></i> الإعدادات الشخصية
+                                        </button>
+                                        <div class="border-t border-slate-800 my-1"></div>
+                                        <button id="logout-btn" class="w-full text-right block px-4 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10">
+                                            <i class="fa-solid fa-right-from-bracket ml-2"></i> تسجيل الخروج
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </header>
@@ -325,10 +354,12 @@
 
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-            // الاستماع الحي للكورسات والأكواد عند الطالب لتتحدث أوتوماتيك
+            // الاستماع الحي للتنبيهات والكورسات
             onSnapshot(collection(db, "courses"), (coursesSnap) => {
                 onSnapshot(collection(db, "activation_codes"), (codesSnap) => {
-                    loadStudentCourses(userData, user.uid, coursesSnap, codesSnap);
+                    onSnapshot(collection(db, "notifications"), (notifSnap) => {
+                        loadStudentDataAndCourses(userData, user.uid, coursesSnap, codesSnap, notifSnap);
+                    });
                 });
             });
         }
@@ -343,7 +374,6 @@
             document.getElementById('settings-modal').classList.remove('hidden');
         }
 
-        // إرسال طلب تعديل البيانات للمعلم
         document.getElementById('settings-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const user = auth.currentUser;
@@ -363,13 +393,36 @@
             });
 
             closeSettingsModal();
-            showModal("تم الإرسال", "تم إرسال طلب تعديل بياناتك للمعلم بنجاح، في انتظار الموافقة.");
+            showModal("تم الإرسال", "تم إرسال طلب تعديل بياناتك للمعلم للموافقة عليه.");
         });
 
-        async function loadStudentCourses(userData, userId, coursesSnap, codesSnap) {
+        async function loadStudentDataAndCourses(userData, userId, coursesSnap, codesSnap, notifSnap) {
             const grid = document.getElementById('courses-grid');
+            const notifList = document.getElementById('notifications-list');
+            const notifBadge = document.getElementById('notif-badge');
+
+            // عرض التنبيهات الخاصة بالسنة أو الخاصة بالطالب نفسه
+            let notifHtml = '';
+            let unreadCount = 0;
+            notifSnap.forEach(docSnap => {
+                const n = docSnap.data();
+                if (n.targetYear === 'all' || n.targetYear === userData.academicYear || n.targetUserId === userId) {
+                    unreadCount++;
+                    notifHtml += `
+                        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3">
+                            <h4 class="text-xs font-bold text-sky-400 mb-1">${n.title}</h4>
+                            <p class="text-slate-300 text-xs leading-relaxed">${n.message}</p>
+                        </div>
+                    `;
+                }
+            });
+            if(notifList) notifList.innerHTML = notifHtml || '<p class="text-slate-400 text-xs text-center py-4">لا توجد تنبيهات حالياً.</p>';
+            if(notifBadge) {
+                if(unreadCount > 0) notifBadge.classList.remove('hidden');
+                else notifBadge.classList.add('hidden');
+            }
+
             try {
-                // خريطة لتحديد هل كود المحاضرة معطل أم لا
                 let courseCodeDisabledMap = {};
                 codesSnap.forEach(docSnap => {
                     const codeObj = docSnap.data();
@@ -379,7 +432,6 @@
                 });
 
                 let html = '';
-                
                 coursesSnap.forEach((docSnap) => {
                     const c = docSnap.data();
                     const courseId = docSnap.id;
