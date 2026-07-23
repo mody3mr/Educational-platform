@@ -4,18 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منصة المتفوقين التعليمية</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Cairo Font -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #020617; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-    </style>
+    <style> body { font-family: 'Cairo', sans-serif; } </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-sky-500 selection:text-slate-950">
 
@@ -31,7 +23,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, updateDoc, arrayUnion, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
@@ -47,128 +39,76 @@
         const db = getFirestore(app);
         const appDiv = document.getElementById('app');
 
-        // مراقبة تسجيل الدخول
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // فحص هل الطالب سجل بياناته التفصيلية من قبل في قاعدة البيانات؟
                 const userDocRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userDocRef);
-
                 if (userSnap.exists()) {
-                    renderStudentDashboard(user, userSnap.data());
+                    renderDashboard(user, userSnap.data());
                 } else {
-                    renderCompleteProfileView(user);
+                    renderProfileForm(user);
                 }
             } else {
-                renderAuthView();
+                renderAuth();
             }
         });
 
-        // 1. شاشة تسجيل الدخول / إنشاء حساب جديد
-        function renderAuthView() {
+        function renderAuth() {
             appDiv.innerHTML = `
-                <div class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
-                    <div class="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10">
-                        <div class="text-center mb-8">
-                            <div class="w-16 h-16 bg-sky-500/10 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl border border-sky-500/20">
-                                <i class="fa-solid fa-graduation-cap"></i>
-                            </div>
-                            <h1 class="text-2xl font-black text-white">بوابة الطالب التعليمية</h1>
-                            <p class="text-slate-400 text-sm mt-2">سجل دخولك أو أنشئ حساباً جديداً</p>
+                <div class="min-h-screen flex items-center justify-center p-6">
+                    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                        <div class="text-center mb-6">
+                            <h1 class="text-2xl font-black text-white">تسجيل الدخول للمنصة</h1>
+                            <p class="text-slate-400 text-sm mt-1">أدخل بريدك وكلمة المرور للمتابعة</p>
                         </div>
-
                         <form id="auth-form" class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 uppercase mb-2">البريد الإلكتروني</label>
-                                <input type="email" id="email" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white text-sm focus:border-sky-500 outline-none" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 uppercase mb-2">كلمة المرور</label>
-                                <input type="password" id="password" required class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-white text-sm focus:border-sky-500 outline-none" />
-                            </div>
-                            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-4 rounded-2xl transition shadow-lg shadow-sky-500/20">
-                                دخول / تسجيـل
-                            </button>
+                            <input type="email" id="email" required placeholder="البريد الإلكتروني" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
+                            <input type="password" id="password" required placeholder="كلمة المرور (6 أحرف فأكثر)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
+                            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3 rounded-xl transition">دخول / إنشاء حساب</button>
                         </form>
-                        <div id="error-msg" class="text-rose-400 text-xs font-bold mt-4 text-center"></div>
+                        <div id="err" class="text-rose-400 text-xs mt-3 text-center font-bold"></div>
                     </div>
                 </div>
             `;
-
             document.getElementById('auth-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                const errorMsg = document.getElementById('error-msg');
+                const pass = document.getElementById('password').value;
                 try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } catch (err) {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } catch {
                     try {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                    } catch (regErr) {
-                        errorMsg.innerText = "❌ خطأ في البريد أو كلمة المرور (يجب أن تكون 6 أحرف على الأقل)";
+                        await createUserWithEmailAndPassword(auth, email, pass);
+                    } catch (err) {
+                        document.getElementById('err').innerText = "حدث خطأ في التسجيل، تأكد من صحة البيانات.";
                     }
                 }
             });
         }
 
-        // 2. استكمال البيانات الشخصية (الاسم الرباعي والأرقام والمحافظة)
-        function renderCompleteProfileView(user) {
+        function renderProfileForm(user) {
             appDiv.innerHTML = `
                 <div class="min-h-screen flex items-center justify-center p-6">
-                    <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
-                        <h2 class="text-2xl font-black text-white mb-2">أهلاً بك! استكمل بياناتك الشخصية</h2>
-                        <p class="text-slate-400 text-sm mb-6">هذه البيانات مطلوبة لتوשيق حسابك في المنصة.</p>
-                        
+                    <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                        <h2 class="text-2xl font-black text-white mb-2">استكمال بيانات الطالب</h2>
+                        <p class="text-slate-400 text-sm mb-6">هذه الخطوة تطلب مرة واحدة فقط.</p>
                         <form id="profile-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="md:col-span-2">
-                                <label class="block text-xs font-bold text-slate-300 mb-1">الاسم الرباعي</label>
-                                <input type="text" id="fullName" required placeholder="محمد أحمد علي محمود" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 mb-1">رقم هاتف الطالب</label>
-                                <input type="tel" id="studentPhone" required placeholder="01xxxxxxxx" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 mb-1">رقم هاتف الأب</label>
-                                <input type="tel" id="fatherPhone" required placeholder="01xxxxxxxx" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 mb-1">رقم هاتف الأم</label>
-                                <input type="tel" id="motherPhone" required placeholder="01xxxxxxxx" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 mb-1">تاريخ الميلاد</label>
-                                <input type="date" id="birthDate" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 mb-1">الرقم القومي (البطاقة)</label>
-                                <input type="text" id="nationalId" required placeholder="14 رقم" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 mb-1">السنة الدراسية</label>
-                                <select id="academicYear" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
-                                    <option value="first">الصف الأول الثانوي</option>
-                                    <option value="second">الصف الثاني الثانوي</option>
-                                    <option value="third">الصف الثالث الثانوي</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 mb-1">المدرسة</label>
-                                <input type="text" id="school" required placeholder="اسم المدرسة" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-300 mb-1">المحافظة</label>
-                                <input type="text" id="governorate" required placeholder="القاهرة، الجيزة،..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                            </div>
-                            <div class="md:col-span-2 mt-4">
-                                <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3.5 rounded-xl transition">حفظ ومتابعة إلى المنصة</button>
-                            </div>
+                            <input type="text" id="fullName" required placeholder="الاسم الرباعي" class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                            <input type="tel" id="studentPhone" required placeholder="رقم هاتف الطالب" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                            <input type="tel" id="fatherPhone" required placeholder="رقم هاتف الأب" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                            <input type="tel" id="motherPhone" required placeholder="رقم هاتف الأم" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                            <input type="text" id="school" required placeholder="اسم المدرسة" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                            <input type="text" id="governorate" required placeholder="المحافظة" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                            <select id="academicYear" class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
+                                <option value="first">الصف الأول الثانوي</option>
+                                <option value="second">الصف الثاني الثانوي</option>
+                                <option value="third">الصف الثالث الثانوي</option>
+                            </select>
+                            <button type="submit" class="md:col-span-2 bg-sky-500 text-slate-950 font-bold py-3.5 rounded-xl">حفظ ودخول المنصة</button>
                         </form>
                     </div>
                 </div>
             `;
-
             document.getElementById('profile-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const data = {
@@ -176,136 +116,165 @@
                     studentPhone: document.getElementById('studentPhone').value,
                     fatherPhone: document.getElementById('fatherPhone').value,
                     motherPhone: document.getElementById('motherPhone').value,
-                    birthDate: document.getElementById('birthDate').value,
-                    nationalId: document.getElementById('nationalId').value,
-                    academicYear: document.getElementById('academicYear').value,
                     school: document.getElementById('school').value,
                     governorate: document.getElementById('governorate').value,
-                    email: user.email
+                    academicYear: document.getElementById('academicYear').value,
+                    unlockedCourses: []
                 };
-
                 await setDoc(doc(db, "users", user.uid), data);
-                renderStudentDashboard(user, data);
+                renderDashboard(user, data);
             });
         }
 
-        // 3. لوحة تحكم الطالب الاحترافية مع الهيدر المنسدل والقائمة الجانبية
-        async function renderStudentDashboard(user, userData) {
+        async function renderDashboard(user, userData) {
             appDiv.innerHTML = `
                 <div class="min-h-screen flex flex-col md:flex-row">
                     <!-- القائمة الجانبية -->
                     <aside class="w-full md:w-72 bg-slate-900 border-l border-slate-800 p-6 hidden md:flex flex-col justify-between">
                         <div>
                             <div class="flex items-center gap-3 mb-10 px-2">
-                                <div class="w-11 h-11 bg-sky-500 text-slate-950 rounded-2xl flex items-center justify-center font-black">
+                                <div class="w-10 h-10 bg-sky-500 text-slate-950 rounded-xl flex items-center justify-center font-bold">
                                     <i class="fa-solid fa-graduation-cap"></i>
                                 </div>
                                 <div>
                                     <h1 class="font-bold text-white text-sm">منصة المتفوقين</h1>
-                                    <span class="text-xs text-sky-400 font-semibold">بوابة الطالب</span>
+                                    <span class="text-xs text-sky-400">بوابة الطالب الذكية</span>
                                 </div>
                             </div>
                             <nav class="space-y-2">
-                                <button onclick="switchTab('courses')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold bg-sky-500 text-slate-950 shadow-lg shadow-sky-500/20">
+                                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold bg-sky-500 text-slate-950">
                                     <i class="fa-solid fa-play-circle"></i> كورساتي المفعلة
-                                </button>
-                                <button onclick="switchTab('exams')" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800">
+                                </a>
+                                <a href="#" onclick="alert('قسم الاختبارات قادم قريبأً!')" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800">
                                     <i class="fa-solid fa-clipboard-question"></i> الاختبارات والواجبات
-                                </button>
+                                </a>
                             </nav>
                         </div>
                     </aside>
 
-                    <!-- المحتوى الرئيسي -->
+                    <!-- المحتوى -->
                     <main class="flex-1 p-6 md:p-10 overflow-y-auto">
-                        <!-- الهيدر مع قائمة الإعدادات المنسدلة -->
-                        <header class="flex justify-between items-center mb-8 pb-6 border-b border-slate-800 relative">
+                        <header class="flex justify-between items-center mb-8 pb-6 border-b border-slate-800">
                             <div>
-                                <h2 class="text-3xl font-black text-white">أهلاً، ${userData.fullName} 👋</h2>
-                                <p class="text-slate-400 text-sm mt-1">مرحباً بك في صفحتك الدراسية</p>
+                                <h2 class="text-2xl md:text-3xl font-black text-white">مرحباً، ${userData.fullName} 👋</h2>
+                                <p class="text-slate-400 text-sm mt-1">السنة الدراسية: <span class="text-sky-400 font-bold">${userData.academicYear === 'third' ? 'الصف الثالث الثانوي' : userData.academicYear === 'second' ? 'الصف الثاني الثانوي' : 'الصف الأول الثانوي'}</span></p>
                             </div>
-                            
-                            <!-- زر القائمة المنسدلة (Dropdown) -->
-                            <div class="relative">
-                                <button id="menu-btn" class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl hover:border-sky-500 transition">
-                                    <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">
-                                        ${userData.fullName.charAt(0)}
-                                    </div>
-                                    <span class="text-sm font-bold text-white hidden md:inline">${userData.fullName.split(' ')[0]}</span>
-                                    <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
-                                </button>
-
-                                <!-- القائمة المخفية تظهر عند الضغط -->
-                                <div id="dropdown-menu" class="hidden absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50">
-                                    <a href="#" onclick="alert('صفحة الإعدادات الشخصية')" class="block px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800">
-                                        <i class="fa-solid fa-gear ml-2"></i> الإعدادات
-                                    </a>
-                                    <div class="border-t border-slate-800 my-1"></div>
-                                    <button id="logout-btn" class="w-full text-right block px-4 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10">
-                                        <i class="fa-solid fa-right-from-bracket ml-2"></i> تسجيل الخروج
-                                    </button>
-                                </div>
-                            </div>
+                            <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold">تسجيل الخروج</button>
                         </header>
 
-                        <!-- محتوى التبويبات -->
-                        <div id="main-content-area">
-                            <!-- شريط اختيار السنة الدراسية -->
-                            <div class="flex gap-3 mb-6">
-                                <span class="bg-sky-500/10 text-sky-400 border border-sky-500/20 px-4 py-2 rounded-xl text-xs font-bold">
-                                    السنة الدراسية: ${userData.academicYear === 'third' ? 'الصف الثالث الثانوي' : userData.academicYear === 'second' ? 'الصف الثاني الثانوي' : 'الصف الأول الثانوي'}
-                                </span>
-                            </div>
-
-                            <h3 class="text-xl font-bold text-white mb-4">المحاضرات المتاحة</h3>
+                        <!-- حاوية عرض المحاضرات أو التشغيل -->
+                        <div id="dynamic-area">
+                            <h3 class="text-xl font-bold text-white mb-4">المحاضرات المتاحة لسنتك الدراسية</h3>
                             <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <p class="text-slate-400">جاري تحميل المحاضرات...</p>
+                                <p class="text-slate-400">جاري التحميل...</p>
                             </div>
                         </div>
                     </main>
                 </div>
             `;
 
-            // تفاعل زر المنيو المنسدل
-            const menuBtn = document.getElementById('menu-btn');
-            const dropdown = document.getElementById('dropdown-menu');
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('hidden');
-            });
-            window.addEventListener('click', () => dropdown.classList.add('hidden'));
-
-            // تسجيل الخروج
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
-
-            loadStudentCourses(userData.academicYear);
+            loadStudentCourses(userData, user.uid);
         }
 
-        // جلب المحاضرات حسب السنة الدراسية
-        async function loadStudentCourses(studentYear) {
+        async function loadStudentCourses(userData, userId) {
             const grid = document.getElementById('courses-grid');
             try {
                 const querySnapshot = await getDocs(collection(db, "courses"));
                 let html = '';
-                querySnapshot.forEach((doc) => {
-                    const c = doc.data();
-                    html += `
-                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between shadow-xl">
-                            <div>
-                                <span class="text-xs bg-sky-500/10 text-sky-400 px-3 py-1 rounded-xl font-bold">${c.subject || 'مادة'}</span>
-                                <h3 class="text-lg font-bold text-white mt-3">${c.title}</h3>
-                                <p class="text-slate-400 text-sm mt-2">${c.description}</p>
+                
+                querySnapshot.forEach((docSnap) => {
+                    const c = docSnap.data();
+                    const courseId = docSnap.id;
+                    const isUnlocked = userData.unlockedCourses && userData.unlockedCourses.includes(courseId);
+
+                    // فلترة حسب سنة الطالب
+                    if (c.academicYear === userData.academicYear) {
+                        html += `
+                            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between shadow-xl">
+                                <div>
+                                    <span class="text-xs bg-sky-500/10 text-sky-400 px-3 py-1 rounded-xl font-bold">${c.subject}</span>
+                                    <h3 class="text-lg font-bold text-white mt-3">${c.title}</h3>
+                                    <p class="text-slate-400 text-sm mt-2 line-clamp-2">${c.description}</p>
+                                </div>
+                                <div class="mt-6">
+                                    ${isUnlocked ? `
+                                        <button onclick="window.watchLesson('${c.title}', '${c.videoUrl}', '${c.description}')" class="w-full bg-emerald-500 text-slate-950 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-play"></i> مشاهدة المحاضرة
+                                        </button>
+                                    ` : `
+                                        <button onclick="window.promptActivation('${courseId}', '${userId}')" class="w-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-slate-950 transition">
+                                            <i class="fa-solid fa-lock"></i> أدخل كود التفعيل
+                                        </button>
+                                    `}
+                                </div>
                             </div>
-                            <button class="mt-6 w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3 rounded-xl transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-play text-xs"></i> مشاهدة المحاضرة
-                            </button>
-                        </div>
-                    `;
+                        `;
+                    }
                 });
-                grid.innerHTML = html || '<p class="text-slate-400">لا توجد كورسات مضافة حالياً.</p>';
+                grid.innerHTML = html || '<p class="text-slate-400">لا توجد محاضرات مضافة لسنتك الدراسية حالياً.</p>';
             } catch (err) {
-                grid.innerHTML = '<p class="text-rose-400">حدث خطأ في تحميل الكورسات.</p>';
+                grid.innerHTML = '<p class="text-rose-400">حدث خطأ في تحميل المحاضرات.</p>';
             }
+        }
+
+        // نافذة تفعيل الكود للطالب
+        window.promptActivation = async function(courseId, userId) {
+            const code = prompt("أدخل كود التفعيل الخاص بهذه المحاضرة:");
+            if (!code) return;
+
+            // البحث عن الكود في قاعدة البيانات
+            const codesRef = collection(db, "activation_codes");
+            const q = query(codesRef, where("code", "==", code.trim()), where("courseId", "==", courseId));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                alert("❌ كود التفعيل غير صحيح أو لا ينتمي لهذه المحاضرة!");
+                return;
+            }
+
+            let codeDocId = null;
+            let codeData = null;
+            querySnapshot.forEach((doc) => {
+                codeDocId = doc.id;
+                codeData = doc.data();
+            });
+
+            if (codeData.isUsed) {
+                alert("⚠️ عذراً، هذا الكود تم استخدامه من قبل!");
+                return;
+            }
+
+            // تحديث الكود بأنه تم استخدامه
+            await updateDoc(doc(db, "activation_codes", codeDocId), {
+                isUsed: true,
+                usedBy: userId
+            });
+
+            // إضافة الكورس لقائمة الكورسات المفعلة للطالب
+            await updateDoc(doc(db, "users", userId), {
+                unlockedCourses: arrayUnion(courseId)
+            });
+
+            alert("🎉 مبروك! تم تفعيل المحاضرة بنجاح، استمتع بالمشاهدة.");
+            location.reload();
+        }
+
+        // تشغيل الفيديو الفعلي
+        window.watchLesson = function(title, videoUrl, desc) {
+            let videoId = videoUrl.includes('v=') ? videoUrl.split('v=')[1]?.split('&')[0] : videoUrl.split('/').pop();
+            document.getElementById('dynamic-area').innerHTML = `
+                <button onclick="location.reload()" class="mb-6 flex items-center gap-2 text-sky-400 font-bold">
+                    <i class="fa-solid fa-arrow-right"></i> العودة للمحاضرات
+                </button>
+                <div class="w-full aspect-video bg-black rounded-3xl overflow-hidden border border-slate-800 shadow-2xl mb-6">
+                    <iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
+                    <h2 class="text-2xl font-black text-white">${title}</h2>
+                    <p class="text-slate-300 mt-3 leading-relaxed">${desc}</p>
+                </div>
+            `;
         }
     </script>
 </body>
