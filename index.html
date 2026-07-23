@@ -27,7 +27,6 @@
         </div>
     </div>
 
-    <!-- نافذة إدخال كود التفعيل -->
     <div id="activation-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div class="w-14 h-14 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -43,7 +42,7 @@
         </div>
     </div>
 
-    <!-- نافذة الإعدادات -->
+    <!-- نافذة إعدادات الطالب -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-gear text-sky-400 ml-2"></i>الإعدادات الشخصية</h3>
@@ -151,7 +150,7 @@
                         const userData = userSnap.data();
                         if(userData.deviceBlocked) {
                             signOut(auth);
-                            showModal("جهاز محظور أمنياً", "عذراً، تم حظر هذا الجهاز من قِبل الإدارة.", "rose");
+                            showModal("جهاز محظور أمنياً", "عذراً، تم حظر هذا الجهاز.", "rose");
                             return;
                         }
                         renderDashboard(user, userData);
@@ -185,7 +184,7 @@
                     try {
                         await createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
                     } catch {
-                        showModal("خطأ", "تأكد من صحة البيانات أو أن كلمة المرور 6 أحرف على الأقل.", "rose");
+                        showModal("خطأ", "تأكد من صحة البيانات.", "rose");
                     }
                 }
             });
@@ -218,11 +217,6 @@
                 e.preventDefault();
                 const studentPhone = document.getElementById('studentPhone').value.trim();
                 const nationalId = document.getElementById('nationalId').value.trim();
-                const usersRef = collection(db, "users");
-                if (!(await getDocs(query(usersRef, where("studentPhone", "==", studentPhone)))).empty || !(await getDocs(query(usersRef, where("nationalId", "==", nationalId)))).empty) {
-                    showModal("تنبيه تكرار", "رقم الهاتف أو الرقم القومي مسجل مسبقاً!", "rose");
-                    return;
-                }
                 await setDoc(doc(db, "users", user.uid), {
                     fullName: document.getElementById('fullName').value,
                     studentPhone, fatherPhone: document.getElementById('fatherPhone').value,
@@ -338,7 +332,7 @@
                 status: 'pending', createdAt: new Date()
             });
             closeSettingsModal();
-            showModal("تم الإرسال", "تم إرسال طلب تعديل بياناتك للمعلم للموافقة عليه.");
+            showModal("تم الإرسال", "تم إرسال طلب تعديل بياناتك للمعلم.");
         });
 
         async function loadStudentDataAndCourses(userData, userId, coursesSnap, codesSnap, notifSnap) {
@@ -392,7 +386,6 @@
                     const isCodeDisabled = courseCodeDisabledMap[courseId] || false;
 
                     if (c.academicYear === userData.academicYear && isActive) {
-                        // تخزين بيانات المحاضرة في متغير عام عشان زر المشاهدة والاختبار والملفات يقدروا يوصلولها
                         window.allCoursesData = window.allCoursesData || {};
                         window.allCoursesData[courseId] = c;
 
@@ -440,7 +433,7 @@
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
-                showModal("خطأ في التفعيل", "كود التفعيل غير صحيح أو لا ينتمي لهذه المحاضرة!", "rose");
+                showModal("خطأ في التفعيل", "كود التفعيل غير صحيح!", "rose");
                 return;
             }
 
@@ -449,12 +442,12 @@
             querySnapshot.forEach((doc) => { codeDocId = doc.id; codeData = doc.data(); });
 
             if (codeData.isDisabled) {
-                showModal("كود معطل", "عذراً، هذا الكود معطّل مؤقتاً من قِبل إدارة المنصة.", "rose");
+                showModal("كود معطل", "عذراً، هذا الكود معطّل مؤقتاً.", "rose");
                 return;
             }
 
             if (codeData.isUsed) {
-                showModal("كود مستخدم مسبقاً", "عذراً، هذا الكود تم استخدامه من قِبل جهاز/طالب آخر!", "rose");
+                showModal("كود مستخدم مسبقاً", "عذراً، هذا الكود تم استخدامه مسبقاً!", "rose");
                 return;
             }
 
@@ -464,40 +457,27 @@
             showModal("تم التفعيل بنجاح!", "مبروك! تم فتح المحاضرة لك بنجاح.");
         }
 
-        // عرض المحاضرة (فيديو + ملفات PDF + زر الاختبار)
         window.openCourseView = function(courseId) {
             const c = window.allCoursesData[courseId];
             if(!c) return;
 
             let videoId = c.videoUrl.includes('v=') ? c.videoUrl.split('v=')[1]?.split('&')[0] : c.videoUrl.split('/').pop();
             
-            let filesHtml = '';
-            if (c.files && c.files.length > 0) {
-                c.files.forEach(f => {
-                    filesHtml += `
-                        <a href="${f.url}" target="_blank" class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-2xl hover:border-rose-500 transition">
-                            <div class="flex items-center gap-3">
-                                <i class="fa-solid fa-file-pdf text-rose-500 text-xl"></i>
-                                <span class="font-bold text-sm text-white">${f.title}</span>
-                            </div>
-                            <span class="bg-rose-500/10 text-rose-400 text-xs px-3 py-1.5 rounded-xl font-bold">تحميل / تصفح</span>
-                        </a>
-                    `;
-                });
-            } else {
-                filesHtml = `<p class="text-slate-500 text-xs">لا توجد ملفات PDF مرفقة لهذه المحاضرة.</p>`;
-            }
+            let filesHtml = (c.files || []).map(f => `
+                <a href="${f.url}" target="_blank" class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-2xl hover:border-rose-500 transition">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-file-pdf text-rose-500 text-xl"></i>
+                        <span class="font-bold text-sm text-white">${f.title}</span>
+                    </div>
+                    <span class="bg-rose-500/10 text-rose-400 text-xs px-3 py-1.5 rounded-xl font-bold">تحميل</span>
+                </a>
+            `).join('') || `<p class="text-slate-500 text-xs">لا توجد ملفات مرفقة.</p>`;
 
-            let quizBtnHtml = '';
-            if (c.quiz && c.quiz.length > 0) {
-                quizBtnHtml = `
-                    <button onclick="window.startQuiz('${courseId}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-4 rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
-                        <i class="fa-solid fa-clipboard-question"></i> بدء امتحان هذه المحاضرة (${c.quiz.length} أسئلة)
-                    </button>
-                `;
-            } else {
-                quizBtnHtml = `<p class="text-slate-500 text-xs text-center">لا يوجد امتحان مضاف لهذه المحاضرة حالياً.</p>`;
-            }
+            let quizBtnHtml = (c.quiz && c.quiz.length > 0) ? `
+                <button onclick="window.startQuiz('${courseId}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-4 rounded-2xl transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+                    <i class="fa-solid fa-clipboard-question"></i> بدء امتحان المحاضرة (المدة: ${c.quizDuration || 10} دقائق)
+                </button>
+            ` : `<p class="text-slate-500 text-xs text-center">لا يوجد امتحان مضاف.</p>`;
 
             document.getElementById('dynamic-area').innerHTML = `
                 <button onclick="location.reload()" class="mb-6 flex items-center gap-2 text-sky-400 font-bold transition hover:text-sky-300">
@@ -505,7 +485,6 @@
                 </button>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- عمود الفيديو والوصف -->
                     <div class="lg:col-span-2 space-y-6">
                         <div class="w-full aspect-video bg-black rounded-3xl overflow-hidden border border-slate-800 shadow-2xl relative">
                             <iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
@@ -516,10 +495,9 @@
                         </div>
                     </div>
 
-                    <!-- عمود الملفات والاختبار -->
                     <div class="space-y-6">
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-folder-open text-rose-400 ml-2"></i>الملفات والملازم الدراسية</h3>
+                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-folder-open text-rose-400 ml-2"></i>الملفات الدراسية</h3>
                             <div class="space-y-2">${filesHtml}</div>
                         </div>
 
@@ -532,7 +510,9 @@
             `;
         }
 
-        // تشغيل نظام الاختبار التفاعلي للطالب
+        let quizTimerInterval = null;
+
+        // تشغيل نظام الامتحان مع المؤقت وحماية مغادرة الصفحة
         window.startQuiz = function(courseId) {
             const c = window.allCoursesData[courseId];
             if(!c || !c.quiz) return;
@@ -548,7 +528,6 @@
                         </label>
                     `;
                 });
-
                 questionsHtml += `
                     <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
                         <h4 class="font-bold text-white text-sm">س ${qIndex + 1}: ${q.question}</h4>
@@ -558,67 +537,104 @@
             });
 
             document.getElementById('dynamic-area').innerHTML = `
-                <button onclick="window.openCourseView('${courseId}')" class="mb-6 flex items-center gap-2 text-sky-400 font-bold transition hover:text-sky-300">
-                    <i class="fa-solid fa-arrow-right"></i> العودة للمحاضرة
-                </button>
-                
                 <div class="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
-                    <div class="text-center pb-4 border-b border-slate-800">
-                        <h2 class="text-2xl font-black text-white">اختبار محاضرة: ${c.title}</h2>
-                        <p class="text-slate-400 text-xs mt-1">أجب عن الأسئلة التالية بعناية، ثم اضغط إرسال لمعرفة نتيجتك.</p>
+                    <div class="flex justify-between items-center pb-4 border-b border-slate-800">
+                        <div>
+                            <h2 class="text-xl font-black text-white">امتحان: ${c.title}</h2>
+                            <p class="text-slate-400 text-xs mt-1">تنبيه: مغادرة الصفحة تنهي الامتحان بدرجة (صفر).</p>
+                        </div>
+                        <div class="bg-rose-500/10 border border-rose-500/30 text-rose-400 font-mono font-bold px-4 py-2 rounded-2xl text-lg flex items-center gap-2">
+                            <i class="fa-solid fa-clock"></i> <span id="quiz-timer-display">--:--</span>
+                        </div>
                     </div>
 
                     <form id="quiz-submit-form" class="space-y-6">
                         ${questionsHtml}
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-4 rounded-2xl transition shadow-lg shadow-emerald-600/20">
-                            إرسال الإجابات وعرض النتيجة الفورية
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-4 rounded-2xl transition">
+                            إرسال الإجابات النهائية
                         </button>
                     </form>
                 </div>
             `;
 
-            document.getElementById('quiz-submit-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                let score = 0;
-                const total = c.quiz.length;
+            // بدء المؤقت
+            const durationMin = c.quizDuration || 10;
+            let timeLeft = durationMin * 60;
+            
+            if(quizTimerInterval) clearInterval(quizTimerInterval);
+            quizTimerInterval = setInterval(() => {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                const timerEl = document.getElementById('quiz-timer-display');
+                if(timerEl) timerEl.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                
+                if(timeLeft <= 0) {
+                    clearInterval(quizTimerInterval);
+                    document.removeEventListener('visibilitychange', handleVisibilityHandler);
+                    submitExam(courseId, true); // انتهاء الوقت
+                }
+            }, 1000);
 
+            // حماية أمنية: مراقبة مغادرة التبويب / الصفحة
+            const handleVisibilityHandler = () => {
+                if (document.hidden) {
+                    clearInterval(quizTimerInterval);
+                    document.removeEventListener('visibilitychange', handleVisibilityHandler);
+                    submitExam(courseId, false, true); // غادر الصفحة -> صفر
+                }
+            };
+            document.addEventListener('visibilitychange', handleVisibilityHandler);
+
+            document.getElementById('quiz-submit-form').onsubmit = (e) => {
+                e.preventDefault();
+                clearInterval(quizTimerInterval);
+                document.removeEventListener('visibilitychange', handleVisibilityHandler);
+                submitExam(courseId);
+            };
+        }
+
+        async function submitExam(courseId, isTimeout = false, isCheated = false) {
+            const c = window.allCoursesData[courseId];
+            let score = 0;
+            const total = c.quiz.length;
+
+            if (isCheated) {
+                score = 0;
+                showModal("تم إلغاء الامتحان", "تم رصد مغادرتك لصفحة الامتحان! تم احتساب درجتك (صفر).", "rose");
+            } else {
                 c.quiz.forEach((q, qIndex) => {
                     const selected = document.querySelector(`input[name="question_${qIndex}"]:checked`);
                     if (selected && parseInt(selected.value) === q.correct) {
                         score++;
                     }
                 });
+                if (isTimeout) {
+                    showModal("انتهى الوقت", "انتهى الوقت المخصص، وتم تسجيل ما قمت بالإجابة عليه.", "sky");
+                }
+            }
 
-                // حفظ الدرجة في قاعدة البيانات
-                const user = auth.currentUser;
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                const studentName = userDoc.exists() ? userDoc.data().fullName : "طالب";
+            const user = auth.currentUser;
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            const studentName = userDoc.exists() ? userDoc.data().fullName : "طالب";
 
-                await addDoc(collection(db, "quiz_results"), {
-                    studentId: user.uid,
-                    studentName: studentName,
-                    courseId: courseId,
-                    courseTitle: c.title,
-                    score: score,
-                    total: total,
-                    createdAt: new Date()
-                });
-
-                // عرض النتيجة الفورية للطالب
-                document.getElementById('dynamic-area').innerHTML = `
-                    <div class="max-w-md mx-auto mt-20 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl space-y-6">
-                        <div class="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-3xl flex items-center justify-center mx-auto text-4xl">
-                            <i class="fa-solid fa-award"></i>
-                        </div>
-                        <h2 class="text-2xl font-black text-white">تم إرسال إجاباتك بنجاح!</h2>
-                        <p class="text-slate-400 text-sm">لقد حصلت على درجة:</p>
-                        <div class="text-5xl font-black text-amber-400 font-mono">${score} / ${total}</div>
-                        <button onclick="window.openCourseView('${courseId}')" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3.5 rounded-xl transition">
-                            العودة للمحاضرة
-                        </button>
-                    </div>
-                `;
+            await addDoc(collection(db, "quiz_results"), {
+                studentId: user.uid, studentName: studentName, courseId: courseId, courseTitle: c.title, score: score, total: total, createdAt: new Date()
             });
+
+            document.getElementById('dynamic-area').innerHTML = `
+                <div class="max-w-md mx-auto mt-20 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl space-y-6">
+                    <div class="w-20 h-20 ${isCheated ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'} rounded-3xl flex items-center justify-center mx-auto text-4xl">
+                        <i class="fa-solid ${isCheated ? 'fa-triangle-exclamation' : 'fa-award'}"></i>
+                    </div>
+                    <h2 class="text-2xl font-black text-white">${isCheated ? 'تم إلغاء الامتحان!' : 'تم إرسال إجاباتك بنجاح!'}</h2>
+                    <p class="text-slate-400 text-sm">درجتك الحالية:</p>
+                    <div class="text-5xl font-black text-amber-400 font-mono">${score} / ${total}</div>
+                    <button onclick="window.openCourseView('${courseId}')" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3.5 rounded-xl transition">
+                        العودة للمحاضرة
+                    </button>
+                </div>
+            `;
         }
     </script>
 </body>
