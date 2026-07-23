@@ -55,6 +55,7 @@
         const db = getFirestore(app);
         const appDiv = document.getElementById('app');
 
+        // منع السكرين شوت وفحص الشاشة
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
             if (e.key === 'PrintScreen' || (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
@@ -77,9 +78,7 @@
             document.getElementById('custom-modal').classList.remove('hidden');
         }
 
-        window.closeModal = function() {
-            document.getElementById('custom-modal').classList.add('hidden');
-        }
+        window.closeModal = function() { document.getElementById('custom-modal').classList.add('hidden'); }
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -87,9 +86,9 @@
                 const userSnap = await getDoc(userDocRef);
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
-                    if(userData.isBlocked) {
+                    if(userData.deviceBlocked) {
                         signOut(auth);
-                        showModal("حساب محظور", "عذراً، تم حظرك من قبل إدارة المنصة.", "rose");
+                        showModal("جهاز محظور أمنياً", "عذراً، تم حظر هذا الجهاز من قِبل إدارة المنصة ولا يمكنك الدخول.", "rose");
                         return;
                     }
                     renderDashboard(user, userData);
@@ -161,10 +160,7 @@
                 const nationalId = document.getElementById('nationalId').value.trim();
 
                 const usersRef = collection(db, "users");
-                const qPhone = query(usersRef, where("studentPhone", "==", studentPhone));
-                const qId = query(usersRef, where("nationalId", "==", nationalId));
-                
-                if (!(await getDocs(qPhone)).empty || !(await getDocs(qId)).empty) {
+                if (!(await getDocs(query(usersRef, where("studentPhone", "==", studentPhone)))).empty || !(await getDocs(query(usersRef, where("nationalId", "==", nationalId)))).empty) {
                     showModal("تنبيه تكرار", "رقم الهاتف أو الرقم القومي مُسجل مسبقاً بحساب آخر!", "rose");
                     return;
                 }
@@ -179,7 +175,7 @@
                     governorate: document.getElementById('governorate').value,
                     academicYear: document.getElementById('academicYear').value,
                     unlockedCourses: [],
-                    isBlocked: false
+                    deviceBlocked: false
                 };
 
                 await setDoc(doc(db, "users", user.uid), data);
@@ -242,10 +238,7 @@
 
             const menuBtn = document.getElementById('menu-btn');
             const dropdown = document.getElementById('dropdown-menu');
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                dropdown.classList.toggle('hidden');
-            });
+            menuBtn.addEventListener('click', (e) => { e.stopPropagation(); dropdown.classList.toggle('hidden'); });
             window.addEventListener('click', () => dropdown.classList.add('hidden'));
 
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
@@ -262,14 +255,9 @@
                     const c = docSnap.data();
                     const courseId = docSnap.id;
                     const isUnlocked = userData.unlockedCourses && userData.unlockedCourses.includes(courseId);
-                    const isActive = c.isActive !== false; // التحقق هل المحاضرة نشطة وليست موقوفة
+                    const isActive = c.isActive !== false;
 
-                    if (c.academicYear === userData.academicYear) {
-                        if (!isActive) {
-                            // لو المحاضرة موقوفة من المعلم لا تظهر أو تظهر بشكل متوقف
-                            return;
-                        }
-
+                    if (c.academicYear === userData.academicYear && isActive) {
                         html += `
                             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between shadow-xl">
                                 <div>
@@ -316,10 +304,7 @@
 
             let codeDocId = null;
             let codeData = null;
-            querySnapshot.forEach((doc) => {
-                codeDocId = doc.id;
-                codeData = doc.data();
-            });
+            querySnapshot.forEach((doc) => { codeDocId = doc.id; codeData = doc.data(); });
 
             if (codeData.isDisabled) {
                 showModal("كود معطل", "عذراً، هذا الكود معطّل مؤقتاً من قِبل إدارة المنصة.", "rose");
@@ -331,14 +316,8 @@
                 return;
             }
 
-            await updateDoc(doc(db, "activation_codes", codeDocId), {
-                isUsed: true,
-                usedBy: userId
-            });
-
-            await updateDoc(doc(db, "users", userId), {
-                unlockedCourses: arrayUnion(courseId)
-            });
+            await updateDoc(doc(db, "activation_codes", codeDocId), { isUsed: true, usedBy: userId });
+            await updateDoc(doc(db, "users", userId), { unlockedCourses: arrayUnion(courseId) });
 
             showModal("تم التفعيل بنجاح!", "مبروك! تم فتح المحاضرة لك بنجاح.");
             setTimeout(() => location.reload(), 2000);
