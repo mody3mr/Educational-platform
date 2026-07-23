@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة الطالب الذكية</title>
+    <title>منصة الطالب التعليمية</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -14,51 +14,155 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-    <div class="flex min-h-screen">
-        <!-- القائمة الجانبية -->
-        <aside class="w-72 bg-slate-900 border-l border-slate-800 p-6 hidden md:flex flex-col justify-between">
-            <div>
-                <div class="flex items-center gap-3 mb-10">
-                    <div class="bg-sky-500 text-slate-950 font-bold p-2.5 rounded-xl">
-                        <i class="fa-solid fa-graduation-cap text-xl"></i>
-                    </div>
-                    <h1 class="text-xl font-bold">بوابة الطالب</h1>
-                </div>
-            </div>
-        </aside>
-
-        <!-- المحتوى الرئيسي -->
-        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
-            <header class="mb-10 pb-6 border-b border-slate-800">
-                <h2 class="text-3xl font-bold text-white">كورساتي المفعلة</h2>
-                <p class="text-slate-400 mt-1">جاري تحميل المحاضرات المتاحة لك...</p>
-            </header>
-
-            <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <p class="text-slate-400">جاري الاتصال بقاعدة البيانات...</p>
-            </div>
-        </main>
+    <!-- عنصر التطبيق الرئيسي -->
+    <div id="app">
+        <div class="flex items-center justify-center min-h-screen text-slate-400">
+            جاري تحميل المنصة...
+        </div>
     </div>
 
-    <!-- كود جافاسكريبت المدمج لضمان عمل الفايربيس بدون أخطاء مسارات -->
+    <!-- جافاسكريبت فايربيس والمنطق بالكامل -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // استبدل البيانات دي ببيانات مشروعك الحقيقية من فايربيس
+        // بيانات مشروعك في فايربيس (تأكد من وضع بياناتك الصحيحة هنا)
         const firebaseConfig = {
-        apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
-        authDomain: "educational-platform-f5e7e.firebaseapp.com",
-        projectId: "educational-platform-f5e7e",
-        storageBucket: "educational-platform-f5e7e.firebasestorage.app",
-        messagingSenderId: "284103839814",
-        appId: "1:284103839814:web:9b6abd761a585c46f03a47"
-};
+            apiKey: "حط_الـ_API_Key_هنا",
+            authDomain: "اسم_مشروعك.firebaseapp.com",
+            projectId: "اسم_مشروعك",
+            storageBucket: "اسم_مشروعك.appspot.com",
+            messagingSenderId: "رقم_المرسل",
+            appId: "رقم_الـ_App_Id"
+        };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        async function loadStudentCourses() {
+        const appDiv = document.getElementById('app');
+
+        // مراقبة حالة المستخدم (هل هو مسجل دخول ولا لأ؟)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                renderStudentDashboard(user);
+            } else {
+                renderLoginView();
+            }
+        });
+
+        // 1. واجهة تسجيل الدخول
+        function renderLoginView() {
+            appDiv.innerHTML = `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-sky-500/10 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl border border-sky-500/20">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <h1 class="text-2xl font-bold text-white">تسجيل دخول الطالب</h1>
+                            <p class="text-slate-400 text-sm mt-2">ادخل بيانات حسابك لمتابعة دروسك</p>
+                        </div>
+
+                        <form id="login-form" class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-2">البريد الإلكتروني</label>
+                                <input type="email" id="email" required placeholder="student@example.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500 transition" />
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-2">كلمة المرور</label>
+                                <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-sky-500 transition" />
+                            </div>
+
+                            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3.5 rounded-xl transition shadow-lg shadow-sky-500/10 flex items-center justify-center gap-2">
+                                <span>دخول للمنصة</span>
+                            </button>
+                        </form>
+
+                        <div id="error-msg" class="text-red-400 text-sm mt-4 text-center font-medium"></div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const errorMsg = document.getElementById('error-msg');
+
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    errorMsg.innerText = "❌ البريد الإلكتروني أو كلمة المرور غير صحيحة!";
+                }
+            });
+        }
+
+        // 2. لوحة تحكم الطالب وجلب الكورسات
+        function renderStudentDashboard(user) {
+            appDiv.innerHTML = `
+                <div class="min-h-screen flex">
+                    <!-- القائمة الجانبية -->
+                    <aside class="w-72 bg-slate-900 border-l border-slate-800 p-6 hidden md:flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-3 mb-10">
+                                <div class="bg-sky-500 text-slate-950 font-bold p-2.5 rounded-xl">
+                                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                                </div>
+                                <h1 class="text-xl font-bold">بوابة الطالب</h1>
+                            </div>
+                            <nav class="space-y-2">
+                                <button class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium bg-sky-500 text-slate-950 font-bold shadow-lg shadow-sky-500/20">
+                                    <i class="fa-solid fa-play-circle text-lg"></i>
+                                    <span>كورساتي المفعلة</span>
+                                </button>
+                            </nav>
+                        </div>
+                        <div class="border-t border-slate-800 pt-4">
+                            <button id="logout-btn" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 text-red-400 transition font-medium">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span>تسجيل الخروج</span>
+                            </button>
+                        </div>
+                    </aside>
+
+                    <!-- محتوى الصفحة -->
+                    <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+                        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 pb-6 border-b border-slate-800">
+                            <div>
+                                <h2 class="text-3xl font-bold text-white">أهلاً بك يا بطل! 👋</h2>
+                                <p class="text-slate-400 mt-1">الحساب: <span class="text-sky-400">${user.email}</span></p>
+                            </div>
+                            <div class="md:hidden">
+                                <button id="logout-btn-mob" class="bg-red-500/10 text-red-400 px-4 py-2 rounded-xl text-sm font-bold">خروج</button>
+                            </div>
+                        </header>
+
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-book-open text-sky-400"></i>
+                                الكورسات المتاحة لك
+                            </h3>
+                            <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <p class="text-slate-400">جاري تحميل المحاضرات...</p>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            `;
+
+            // أزرار تسجيل الخروج
+            const handleLogout = () => signOut(auth);
+            document.getElementById('logout-btn')?.addEventListener('click', handleLogout);
+            document.getElementById('logout-btn-mob')?.addEventListener('click', handleLogout);
+
+            loadCourses();
+        }
+
+        // جلب الكورسات من فايربيس
+        async function loadCourses() {
             const grid = document.getElementById('courses-grid');
             try {
                 const querySnapshot = await getDocs(collection(db, "courses"));
@@ -71,13 +175,13 @@
                 querySnapshot.forEach((doc) => {
                     const c = doc.data();
                     html += `
-                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl hover:border-sky-500/50 transition">
                             <div>
-                                <span class="text-xs bg-sky-500/10 text-sky-400 px-3 py-1 rounded-full font-bold">${c.subject || 'مادة'}</span>
+                                <span class="text-xs bg-sky-500/10 text-sky-400 px-3 py-1 rounded-full font-bold">${c.subject || 'مادة دراسية'}</span>
                                 <h3 class="text-lg font-bold text-white mt-3">${c.title}</h3>
-                                <p class="text-slate-400 text-sm mt-2">${c.description}</p>
+                                <p class="text-slate-400 text-sm mt-2 leading-relaxed">${c.description}</p>
                             </div>
-                            <button class="mt-6 w-full bg-sky-500 text-slate-950 font-bold py-3 rounded-xl hover:bg-sky-400 transition flex items-center justify-center gap-2">
+                            <button class="mt-6 w-full bg-sky-500 text-slate-950 font-bold py-3 rounded-xl hover:bg-sky-400 transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/10">
                                 <i class="fa-solid fa-play"></i> مشاهدة المحاضرة
                             </button>
                         </div>
@@ -85,11 +189,9 @@
                 });
                 grid.innerHTML = html;
             } catch (err) {
-                grid.innerHTML = `<p class="text-red-400 col-span-3">حدث خطأ أثناء تحميل الكورسات. تأكد من صحة بيانات فايربيس في الكود.</p>`;
+                grid.innerHTML = `<p class="text-red-400 col-span-3">حدث خطأ أثناء تحميل الكورسات.</p>`;
             }
         }
-
-        loadStudentCourses();
     </script>
 </body>
 </html>
