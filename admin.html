@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم المعلم - نظام LMS المتكامل</title>
+    <title>لوحة تحكم المعلم - النظام الشامل LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -47,6 +47,28 @@
         </div>
     </div>
 
+    <!-- نافذة تعديل الإشعار -->
+    <div id="edit-notif-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>تعديل التنبيه</h3>
+            <form id="edit-notif-form" class="space-y-4">
+                <input type="hidden" id="edit-notif-id">
+                <input type="text" id="edit-notif-title" required placeholder="عنوان التنبيه" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                <select id="edit-notif-target" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
+                    <option value="all">جميع السنوات الدراسية</option>
+                    <option value="first">الصف الأول الثانوي فقط</option>
+                    <option value="second">الصف الثاني الثانوي فقط</option>
+                    <option value="third">الصف الثالث الثانوي فقط</option>
+                </select>
+                <textarea id="edit-notif-msg" required placeholder="نص التنبيه..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm h-20"></textarea>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition">حفظ التعديل</button>
+                    <button type="button" onclick="closeEditNotifModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-5 py-3 rounded-xl transition">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="app">
         <div class="flex items-center justify-center min-h-screen">
             <div class="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
@@ -56,7 +78,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, getDocs, addDoc, deleteDoc, doc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, getDocs, addDoc, deleteDoc, doc, updateDoc, arrayRemove, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
@@ -102,6 +124,7 @@
 
         window.closeModal = function() { document.getElementById('custom-modal').classList.add('hidden'); }
         window.closeEditModal = function() { document.getElementById('edit-modal').classList.add('hidden'); }
+        window.closeEditNotifModal = function() { document.getElementById('edit-notif-modal').classList.add('hidden'); }
 
         onAuthStateChanged(auth, (user) => {
             if (user) { renderAdminDashboard(user); } else { renderLogin(); }
@@ -132,12 +155,12 @@
                     <header class="flex justify-between items-center pb-6 border-b border-slate-800">
                         <div>
                             <h1 class="text-2xl font-black text-white">لوحة تحكم المعلم المركزية</h1>
-                            <p class="text-slate-400 text-sm">إدارة المحاضرات، الأكواد، الملفات، والاختبارات</p>
+                            <p class="text-slate-400 text-sm">نظام إدارة التعلم المتكامل (LMS)</p>
                         </div>
                         <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition">تسجيل الخروج</button>
                     </header>
 
-                    <!-- النشر والتوليد -->
+                    <!-- النشر والتوليد والنشر التنبيهي -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
                             <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-plus-circle text-sky-400 ml-2"></i>نشر محاضرة جديدة</h3>
@@ -169,31 +192,48 @@
                                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold py-3 rounded-xl transition">حفظ وتفعيل الكود</button>
                                 </form>
                             </div>
+
+                            <div class="pt-4 border-t border-slate-800">
+                                <h3 class="text-md font-bold text-white mb-3"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>نشر تنبيه / إشعار للطلاب</h3>
+                                <form id="notification-form" class="space-y-3">
+                                    <input type="text" id="notif-title" required placeholder="عنوان التنبيه" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
+                                    <select id="notif-target" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs">
+                                        <option value="all">جميع السنوات الدراسية</option>
+                                        <option value="first">الصف الأول الثانوي فقط</option>
+                                        <option value="second">الصف الثاني الثانوي فقط</option>
+                                        <option value="third">الصف الثالث الثانوي فقط</option>
+                                    </select>
+                                    <textarea id="notif-msg" required placeholder="نص التنبيه..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs h-16"></textarea>
+                                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl transition text-xs">نشر الإشعار الآن</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- إضافة ملف دراسي (PDF) واختبار لكل محاضرة -->
+                    <!-- إرفاق ملف PDF وإضافة سؤال اختبار مع تحديد مدة الامتحان -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <!-- رفع ملف PDF -->
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
                             <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-file-pdf text-rose-400 ml-2"></i>إرفاق ملزمة / ملف PDF للمحاضرة</h3>
                             <form id="file-form" class="space-y-4">
                                 <select id="fileCourseSelect" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
                                     <option value="">اختر المحاضرة المستهدفة</option>
                                 </select>
-                                <input type="text" id="fileTitle" required placeholder="عنوان الملزمة (مثال: ملخص الباب الأول PDF)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                                <input type="url" id="fileUrl" required placeholder="رابط الملف (Drive, Dropbox, إلخ)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-3 rounded-xl transition">إرفاق الملف بالمحاضرة</button>
+                                <input type="text" id="fileTitle" required placeholder="عنوان الملزمة (مثال: ملخص الباب الأول)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                                <input type="url" id="fileUrl" required placeholder="رابط الملف" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-3 rounded-xl transition">إرفاق الملف</button>
                             </form>
                         </div>
 
-                        <!-- إضافة سؤال اختبار (MCQ) -->
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-clipboard-question text-indigo-400 ml-2"></i>إضافة سؤال اختبار (اختيار من متعدد)</h3>
+                            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-clipboard-question text-indigo-400 ml-2"></i>إضافة سؤال اختبار + وقت الامتحان</h3>
                             <form id="quiz-form" class="space-y-3">
                                 <select id="quizCourseSelect" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs">
                                     <option value="">اختر المحاضرة للاختبار</option>
                                 </select>
+                                <div>
+                                    <label class="block text-[11px] text-slate-400 mb-1">مدة الامتحان (بالدقائق):</label>
+                                    <input type="number" id="quizDuration" min="1" value="10" placeholder="مثال: 10 دقائق" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-white text-xs" />
+                                </div>
                                 <input type="text" id="quizQuestion" required placeholder="نص السؤال" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
                                 <div class="grid grid-cols-2 gap-2">
                                     <input type="text" id="opt0" required placeholder="الخيار الأول" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
@@ -207,32 +247,91 @@
                                     <option value="2">الإجابة الصحيحة: الخيار الثالث</option>
                                     <option value="3">الإجابة الصحيحة: الخيار الرابع</option>
                                 </select>
-                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-3 rounded-xl transition text-xs">إضافة السؤال للمحاضرة</button>
+                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-3 rounded-xl transition text-xs">إضافة السؤال</button>
                             </form>
                         </div>
                     </div>
 
-                    <!-- نتائج اختبارات الطلاب -->
+                    <!-- إدارة التنبيهات المنشورة -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-square-poll-vertical text-emerald-400 ml-2"></i>درجات ونتائج اختبارات الطلاب</h3>
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bullhorn text-sky-400 ml-2"></i>التنبيهات المنشورة</h3>
+                            <div class="flex gap-3 w-full md:w-auto">
+                                <select id="filter-notif-target" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs flex-1 md:w-48">
+                                    <option value="all">كل الإشعارات</option>
+                                    <option value="all_years">جميع السنوات</option>
+                                    <option value="first">الصف الأول الثانوي</option>
+                                    <option value="second">الصف الثاني الثانوي</option>
+                                    <option value="third">الصف الثالث الثانوي</option>
+                                </select>
+                                <button onclick="window.deleteAllNotifications()" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition">
+                                    <i class="fa-solid fa-trash-can"></i> حذف الكل
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-sm text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">العنوان</th>
+                                        <th class="p-3">مستهدفون</th>
+                                        <th class="p-3">الرسالة</th>
+                                        <th class="p-3">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-notifications-body">
+                                    <tr><td colspan="4" class="p-4 text-center text-slate-500">جاري التحميل...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- نتائج اختبارات الطلاب (مع فلترة، تقييم مستوى، وحذف) -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-square-poll-vertical text-emerald-400 ml-2"></i>درجات ونتائج اختبارات الطلاب ومستوى التقدم</h3>
+                            <select id="filter-results-course" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs">
+                                <option value="all">جميع المحاضرات</option>
+                            </select>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
                                         <th class="p-3">اسم الطالب</th>
                                         <th class="p-3">اسم المحاضرة</th>
-                                        <th class="p-3">الدرجة الحاصل عليها</th>
-                                        <th class="p-3">تاريخ الإرسال</th>
+                                        <th class="p-3">الدرجة</th>
+                                        <th class="p-3">تقييم مستوى التقدم</th>
+                                        <th class="p-3">الإجراء</th>
                                     </tr>
                                 </thead>
                                 <tbody id="quiz-results-body">
-                                    <tr><td colspan="4" class="p-4 text-center text-slate-500">جاري تحميل النتائج...</td></tr>
+                                    <tr><td colspan="5" class="p-4 text-center text-slate-500">جاري التحميل...</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
-                    <!-- إدارة المحاضرات المنشورة -->
+                    <!-- طلبات تعديل البيانات -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-pen text-amber-400 ml-2"></i>طلبات تعديل بيانات الطلاب المعلقة</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-sm text-slate-300">
+                                <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">اسم الطالب الحالي</th>
+                                        <th class="p-3">البيانات الجديدة المطلوبة</th>
+                                        <th class="p-3">الإجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="requests-table-body">
+                                    <tr><td colspan="3" class="p-4 text-center text-slate-500">جاري التحميل...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- إدارة المحاضرات -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-book-open text-sky-400 ml-2"></i>إدارة المحاضرات المنشورة</h3>
@@ -277,7 +376,7 @@
                         </div>
                     </div>
 
-                    <!-- سجل الطلاب وتصدير Excel -->
+                    <!-- إدارة الطلاب وتصدير Excel -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>سجل الطلاب الكامل</h3>
@@ -326,6 +425,7 @@
                     description: document.getElementById('description').value,
                     files: [],
                     quiz: [],
+                    quizDuration: 10,
                     isActive: true,
                     createdAt: new Date()
                 });
@@ -340,36 +440,31 @@
                 if (!code) { showModal("تنبيه", "الرجاء توليد كود أولاً!", "rose"); return; }
 
                 await addDoc(collection(db, "activation_codes"), {
-                    code: code,
-                    courseId: courseId,
-                    isUsed: false,
-                    isDisabled: false,
-                    usedBy: null,
-                    createdAt: new Date()
+                    code: code, courseId: courseId, isUsed: false, isDisabled: false, usedBy: null, createdAt: new Date()
                 });
                 showModal("تم بنجاح", "تم حفظ وتفعيل الكود بنجاح!");
                 document.getElementById('code-form').reset();
                 document.getElementById('generatedCodeInput').value = "";
             });
 
-            // إرفاق ملف PDF للمحاضرة
             document.getElementById('file-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const courseId = document.getElementById('fileCourseSelect').value;
-                const fileTitle = document.getElementById('fileTitle').value;
-                const fileUrl = document.getElementById('fileUrl').value;
-
-                await updateDoc(doc(db, "courses", courseId), {
-                    files: arrayUnion({ title: fileTitle, url: fileUrl })
-                });
-                showModal("تم بنجاح", "تم إرفاق الملزمة بالمحاضرة بنجاح!");
+                const title = document.getElementById('fileTitle').value;
+                const url = document.getElementById('fileUrl').value;
+                const courseDoc = await getDocs(collection(db, "courses"));
+                let currentFiles = [];
+                courseDoc.forEach(d => { if(d.id === courseId) currentFiles = d.data().files || []; });
+                currentFiles.push({ id: Date.now().toString(), title, url });
+                await updateDoc(doc(db, "courses", courseId), { files: currentFiles });
+                showModal("تم بنجاح", "تم إرفاق الملف بنجاح!");
                 document.getElementById('file-form').reset();
             });
 
-            // إضافة سؤال اختبار للمحاضرة
             document.getElementById('quiz-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const courseId = document.getElementById('quizCourseSelect').value;
+                const duration = parseInt(document.getElementById('quizDuration').value) || 10;
                 const question = document.getElementById('quizQuestion').value;
                 const options = [
                     document.getElementById('opt0').value,
@@ -379,11 +474,27 @@
                 ];
                 const correct = parseInt(document.getElementById('quizCorrect').value);
 
-                await updateDoc(doc(db, "courses", courseId), {
-                    quiz: arrayUnion({ question, options, correct })
-                });
-                showModal("تم بنجاح", "تم إضافة السؤال بنجاح للاختبار!");
+                const cRef = doc(db, "courses", courseId);
+                const cSnap = await getDocs(collection(db, "courses"));
+                let currentQuiz = [];
+                cSnap.forEach(d => { if(d.id === courseId) currentQuiz = d.data().quiz || []; });
+                currentQuiz.push({ id: Date.now().toString(), question, options, correct });
+
+                await updateDoc(cRef, { quiz: currentQuiz, quizDuration: duration });
+                showModal("تم بنجاح", "تم إضافة السؤال وتحديث وقت الامتحان بنجاح!");
                 document.getElementById('quiz-form').reset();
+            });
+
+            document.getElementById('notification-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await addDoc(collection(db, "notifications"), {
+                    title: document.getElementById('notif-title').value,
+                    message: document.getElementById('notif-msg').value,
+                    targetYear: document.getElementById('notif-target').value,
+                    createdAt: new Date()
+                });
+                showModal("تم بنجاح", "تم نشر التنبيه للطلاب.");
+                document.getElementById('notification-form').reset();
             });
 
             document.getElementById('edit-course-form').addEventListener('submit', async (e) => {
@@ -397,7 +508,7 @@
                     description: document.getElementById('edit-description').value
                 });
                 closeEditModal();
-                showModal("تم بنجاح", "تم تعديل بيانات المحاضرة بنجاح!");
+                showModal("تم بنجاح", "تم تعديل المحاضرة بنجاح!");
             });
 
             document.getElementById('export-excel-btn')?.addEventListener('click', async () => {
@@ -412,18 +523,15 @@
                     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement("a");
-                    link.setAttribute("href", url);
-                    link.setAttribute("download", "students_database.csv");
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                } catch (err) {
-                    showModal("خطأ", "حدث خطأ أثناء تنزيل الملف: " + err.message, "rose");
-                }
+                    link.setAttribute("href", url); link.setAttribute("download", "students_database.csv");
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                } catch (err) { showModal("خطأ", "حدث خطأ: " + err.message, "rose"); }
             });
 
             document.getElementById('filter-year').addEventListener('change', setupRealtimeListeners);
             document.getElementById('filter-code-status').addEventListener('change', setupRealtimeListeners);
+            document.getElementById('filter-notif-target').addEventListener('change', setupRealtimeListeners);
+            document.getElementById('filter-results-course').addEventListener('change', setupRealtimeListeners);
             document.getElementById('student-search').addEventListener('input', setupRealtimeListeners);
 
             setupRealtimeListeners();
@@ -436,12 +544,14 @@
                 const select = document.getElementById('codeCourseSelect');
                 const fileSelect = document.getElementById('fileCourseSelect');
                 const quizSelect = document.getElementById('quizCourseSelect');
+                const resultsCourseFilter = document.getElementById('filter-results-course');
                 const coursesGrid = document.getElementById('admin-courses-grid');
                 const yearFilter = document.getElementById('filter-year')?.value || 'all';
                 
                 let selectHtml = '<option value="">اختر المحاضرة المراد توليد كود لها</option>';
                 let fileSelectHtml = '<option value="">اختر المحاضرة المستهدفة</option>';
                 let quizSelectHtml = '<option value="">اختر المحاضرة للاختبار</option>';
+                let resultsFilterHtml = '<option value="all">جميع المحاضرات</option>';
                 let coursesHtml = '';
                 coursesMap = {};
 
@@ -455,10 +565,25 @@
                     selectHtml += `<option value="${id}">${c.title} (${c.subject})</option>`;
                     fileSelectHtml += `<option value="${id}">${c.title} (${c.subject})</option>`;
                     quizSelectHtml += `<option value="${id}">${c.title} (${c.subject})</option>`;
+                    resultsFilterHtml += `<option value="${id}">${c.title}</option>`;
 
                     if (yearFilter === 'all' || c.academicYear === yearFilter) {
+                        let filesListHtml = (c.files || []).map((f, fIdx) => `
+                            <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
+                                <span class="truncate max-w-[150px] text-rose-300">${f.title}</span>
+                                <button onclick="window.deleteCourseFile('${id}', '${f.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد ملفات</span>';
+
+                        let quizListHtml = (c.quiz || []).map((q, qIdx) => `
+                            <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
+                                <span class="truncate max-w-[150px] text-indigo-300">س${qIdx+1}: ${q.question}</span>
+                                <button onclick="window.deleteQuizQuestion('${id}', '${q.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد أسئلة</span>';
+
                         coursesHtml += `
-                            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3">
                                 <div>
                                     <div class="flex justify-between items-center mb-2">
                                         <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
@@ -467,10 +592,19 @@
                                         </span>
                                     </div>
                                     <h4 class="text-base font-bold text-white">${c.title}</h4>
-                                    <p class="text-slate-400 text-xs mt-1">السنة: ${yearText}</p>
-                                    <p class="text-slate-500 text-[11px] mt-1">ملفات PDF: ${c.files ? c.files.length : 0} | أسئلة الاختبار: ${c.quiz ? c.quiz.length : 0}</p>
+                                    <p class="text-slate-400 text-xs mt-1">السنة: ${yearText} | وقت الامتحان: ${c.quizDuration || 10} د</p>
+                                    
+                                    <div class="mt-3 border-t border-slate-900 pt-2">
+                                        <p class="text-[11px] font-bold text-slate-400 mb-1">الملفات المرفقة:</p>
+                                        <div class="max-h-24 overflow-y-auto">${filesListHtml}</div>
+                                    </div>
+
+                                    <div class="mt-2 border-t border-slate-900 pt-2">
+                                        <p class="text-[11px] font-bold text-slate-400 mb-1">أسئلة الامتحان:</p>
+                                        <div class="max-h-24 overflow-y-auto">${quizListHtml}</div>
+                                    </div>
                                 </div>
-                                <div class="mt-4 grid grid-cols-3 gap-2">
+                                <div class="grid grid-cols-3 gap-2 pt-2">
                                     <button onclick="window.openEditModal('${id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold hover:bg-sky-500 hover:text-slate-950 transition">تعديل</button>
                                     <button onclick="window.toggleCourseStatus('${id}', ${isActive})" class="bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-xl font-bold transition">
                                         ${isActive ? 'إيقاف' : 'تشغيل'}
@@ -484,31 +618,71 @@
                 if(select) select.innerHTML = selectHtml;
                 if(fileSelect) fileSelect.innerHTML = fileSelectHtml;
                 if(quizSelect) quizSelect.innerHTML = quizSelectHtml;
+                if(resultsCourseFilter && resultsCourseFilter.options.length <= 1) resultsCourseFilter.innerHTML = resultsFilterHtml;
                 if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات مطابقة</p>';
                 
-                loadCodesAndStudents();
+                loadCodesAndStudentsAndResults();
             });
 
-            // الاستماع لدرجات اختبارات الطلاب
-            onSnapshot(collection(db, "quiz_results"), (resSnap) => {
-                const resultsBody = document.getElementById('quiz-results-body');
-                let resHtml = '';
-                resSnap.forEach(docSnap => {
-                    const r = docSnap.data();
-                    resHtml += `
-                        <tr class="border-b border-slate-800/60">
-                            <td class="p-3 font-bold text-white">${r.studentName}</td>
-                            <td class="p-3 text-xs text-sky-400">${r.courseTitle}</td>
-                            <td class="p-3 font-mono font-bold text-amber-400">${r.score} / ${r.total}</td>
-                            <td class="p-3 text-xs text-slate-400">${new Date(r.createdAt?.toDate?.() || Date.now()).toLocaleDateString('ar-EG')}</td>
-                        </tr>
-                    `;
+            onSnapshot(collection(db, "notifications"), (notifSnap) => {
+                const notifBody = document.getElementById('admin-notifications-body');
+                const notifFilter = document.getElementById('filter-notif-target')?.value || 'all';
+                let notifHtml = '';
+
+                notifSnap.forEach(docSnap => {
+                    const n = docSnap.data();
+                    const nId = docSnap.id;
+                    const targetText = n.targetYear === 'all' ? 'جميع السنوات' : (n.targetYear === 'third' ? 'الثالث الثانوي' : n.targetYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي');
+                    
+                    let matchesNotifFilter = true;
+                    if (notifFilter === 'all_years' && n.targetYear !== 'all') matchesNotifFilter = false;
+                    if (notifFilter !== 'all' && notifFilter !== 'all_years' && n.targetYear !== notifFilter) matchesNotifFilter = false;
+
+                    if (matchesNotifFilter) {
+                        notifHtml += `
+                            <tr class="border-b border-slate-800/60">
+                                <td class="p-3 font-bold text-white">${n.title}</td>
+                                <td class="p-3 text-xs text-sky-400">${targetText}</td>
+                                <td class="p-3 text-xs truncate max-w-xs">${n.message}</td>
+                                <td class="p-3 flex gap-2">
+                                    <button onclick="window.openEditNotifModal('${nId}', '${n.title}', '${n.targetYear}', '${n.message}')" class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-xs font-bold transition hover:bg-sky-500 hover:text-slate-950">تعديل</button>
+                                    <button onclick="window.deleteNotification('${nId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold transition hover:bg-rose-500 hover:text-white">حذف</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
                 });
-                if(resultsBody) resultsBody.innerHTML = resHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد نتائج اختبارات مسجلة حتى الآن</td></tr>';
+                if(notifBody) notifBody.innerHTML = notifHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد تنبيهات مطابقة للفلاتر</td></tr>';
+            });
+
+            onSnapshot(collection(db, "profile_requests"), (reqSnap) => {
+                const reqTbody = document.getElementById('requests-table-body');
+                let reqHtml = '';
+                reqSnap.forEach(docSnap => {
+                    const req = docSnap.data();
+                    const reqId = docSnap.id;
+                    if (req.status === 'pending') {
+                        reqHtml += `
+                            <tr class="border-b border-slate-800/60">
+                                <td class="p-3 font-bold text-white">${req.currentName}</td>
+                                <td class="p-3 text-xs space-y-1">
+                                    الاسم: <span class="text-sky-400">${req.newFullName}</span><br>
+                                    هاتف الطالب: <span class="text-sky-400">${req.newStudentPhone}</span><br>
+                                    المدرسة / المحافظة: <span class="text-sky-400">${req.newSchool} / ${req.newGovernorate}</span>
+                                </td>
+                                <td class="p-3 flex gap-2">
+                                    <button onclick="window.approveRequest('${reqId}', '${req.userId}', '${req.newFullName}', '${req.newStudentPhone}', '${req.newFatherPhone}', '${req.newMotherPhone}', '${req.newSchool}', '${req.newGovernorate}')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-xs font-bold transition text-white">موافقة</button>
+                                    <button onclick="window.rejectRequest('${reqId}', '${req.userId}')" class="bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold transition">رفض</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+                if(reqTbody) reqTbody.innerHTML = reqHtml || '<tr><td colspan="3" class="p-4 text-center text-slate-500">لا توجد طلبات تعديل معلقة حالياً</td></tr>';
             });
         }
 
-        function loadCodesAndStudents() {
+        function loadCodesAndStudentsAndResults() {
             onSnapshot(collection(db, "users"), (usersSnap) => {
                 const studentsTbody = document.getElementById('students-table-body');
                 const searchTerm = document.getElementById('student-search')?.value.toLowerCase() || '';
@@ -548,6 +722,7 @@
                 });
                 if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مطابقة للبحث</td></tr>';
 
+                // الاستماع للأكواد
                 onSnapshot(collection(db, "activation_codes"), (codesSnap) => {
                     const codesTbody = document.getElementById('codes-table-body');
                     const codeStatusFilter = document.getElementById('filter-code-status')?.value || 'all';
@@ -589,6 +764,83 @@
                     });
                     if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد أكواد مطابقة للفلتر</td></tr>';
                 });
+
+                // الاستماع لنتائج الاختبارات مع الفلترة والتقييم
+                onSnapshot(collection(db, "quiz_results"), (resSnap) => {
+                    const resultsBody = document.getElementById('quiz-results-body');
+                    const courseFilterId = document.getElementById('filter-results-course')?.value || 'all';
+                    let resHtml = '';
+
+                    resSnap.forEach(docSnap => {
+                        const r = docSnap.data();
+                        const rId = docSnap.id;
+
+                        if (courseFilterId === 'all' || r.courseId === courseFilterId) {
+                            const percentage = Math.round((r.score / r.total) * 100);
+                            let evaluation = '';
+                            let badgeColor = '';
+                            if (percentage >= 85) { evaluation = 'ممتاز (تفوق)'; badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'; }
+                            else if (percentage >= 65) { evaluation = 'جيد جداً'; badgeColor = 'bg-sky-500/10 text-sky-400 border-sky-500/30'; }
+                            else if (percentage >= 50) { evaluation = 'مقبول (ناجح)'; badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/30'; }
+                            else { evaluation = 'يحتاج لتحسين (راسب)'; badgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/30'; }
+
+                            resHtml += `
+                                <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                                    <td class="p-3 font-bold text-white">${r.studentName}</td>
+                                    <td class="p-3 text-xs text-sky-400">${r.courseTitle}</td>
+                                    <td class="p-3 font-mono font-bold text-amber-400">${r.score} / ${r.total} (${percentage}%)</td>
+                                    <td class="p-3">
+                                        <span class="text-xs px-2.5 py-1 rounded-lg border font-bold ${badgeColor}">${evaluation}</span>
+                                    </td>
+                                    <td class="p-3">
+                                        <button onclick="window.deleteQuizResult('${rId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 hover:text-white transition">حذف النتيجة</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    });
+                    if(resultsBody) resultsBody.innerHTML = resHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد نتائج اختبارات مطابقة</td></tr>';
+                });
+            });
+        }
+
+        // حذف ملف من المحاضرة
+        window.deleteCourseFile = async function(courseId, fileId) {
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا الملف؟", "rose", async () => {
+                const cSnap = await getDocs(collection(db, "courses"));
+                let targetCourse = null;
+                cSnap.forEach(d => { if(d.id === courseId) targetCourse = d.data(); });
+                if(targetCourse && targetCourse.files) {
+                    const newFiles = targetCourse.files.filter(f => f.id !== fileId);
+                    await updateDoc(doc(db, "courses", courseId), { files: newFiles });
+                }
+            });
+        }
+
+        // حذف سؤال من امتحان المحاضرة
+        window.deleteQuizQuestion = async function(courseId, qId) {
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا السؤال؟", "rose", async () => {
+                const cSnap = await getDocs(collection(db, "courses"));
+                let targetCourse = null;
+                cSnap.forEach(d => { if(d.id === courseId) targetCourse = d.data(); });
+                if(targetCourse && targetCourse.quiz) {
+                    const newQuiz = targetCourse.quiz.filter(q => q.id !== qId);
+                    await updateDoc(doc(db, "courses", courseId), { quiz: newQuiz });
+                }
+            });
+        }
+
+        window.deleteQuizResult = async function(resultId) {
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف نتيجة هذا الطالب؟", "rose", async () => {
+                await deleteDoc(doc(db, "quiz_results", resultId));
+            });
+        };
+
+        window.deleteAllNotifications = async function() {
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف جميع الإشعارات نهائياً؟", "rose", async () => {
+                const snap = await getDocs(collection(db, "notifications"));
+                const promises = snap.docs.map(d => deleteDoc(doc(db, "notifications", d.id)));
+                await Promise.all(promises);
             });
         }
 
@@ -616,19 +868,28 @@
             });
         };
 
-        window.deleteCode = async function(id, usedByUserId, courseId) {
-            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا الكود نهائياً؟ سيتم غلق المحاضرة من عند الطالب.", "rose", async () => {
-                if (usedByUserId && courseId) {
-                    try {
-                        await updateDoc(doc(db, "users", usedByUserId), { unlockedCourses: arrayRemove(courseId) });
-                    } catch (err) { console.log(err); }
-                }
-                await deleteDoc(doc(db, "activation_codes", id));
-            });
-        };
-
         window.toggleDeviceBlock = async function(userId, currentStatus) {
             await updateDoc(doc(db, "users", userId), { deviceBlocked: !currentStatus });
+        };
+
+        window.approveRequest = async function(reqId, userId, newName, newStudentPhone, newFatherPhone, newMotherPhone, newSchool, newGovernorate) {
+            await updateDoc(doc(db, "users", userId), {
+                fullName: newName, studentPhone: newStudentPhone, fatherPhone: newFatherPhone,
+                motherPhone: newMotherPhone, school: newSchool, governorate: newGovernorate
+            });
+            await updateDoc(doc(db, "profile_requests", reqId), { status: 'approved' });
+            await addDoc(collection(db, "notifications"), {
+                title: "تمت الموافقة على تعديل البيانات", message: "قامت الإدارة بالموافقة على طلب تحديث بياناتك الشخصية.", targetUserId: userId, createdAt: new Date()
+            });
+            showModal("تم بنجاح", "تم الموافقة على تحديث بيانات الطالب.");
+        };
+
+        window.rejectRequest = async function(reqId, userId) {
+            await updateDoc(doc(db, "profile_requests", reqId), { status: 'rejected' });
+            await addDoc(collection(db, "notifications"), {
+                title: "تم رفض طلب تعديل البيانات", message: "عذراً، قامت الإدارة برفض طلب تحديث بياناتك.", targetUserId: userId, createdAt: new Date()
+            });
+            showModal("تم الرفض", "تم رفض طلب التعديل.");
         };
     </script>
 </body>
