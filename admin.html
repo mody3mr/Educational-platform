@@ -11,8 +11,8 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-    <!-- نافذة التنبيهات العامة -->
-    <div id="custom-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-[9999] hidden flex items-center justify-center p-4">
+    <!-- نافذة منبثقة بـ z-index عالي جداً -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
                 <i class="fa-solid fa-circle-info"></i>
@@ -26,7 +26,7 @@
     </div>
 
     <!-- نافذة تعديل المحاضرة -->
-    <div id="edit-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div id="edit-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-pen text-sky-400 ml-2"></i>تعديل بيانات المحاضرة</h3>
             <form id="edit-course-form" class="space-y-4">
@@ -48,8 +48,8 @@
         </div>
     </div>
 
-    <!-- نافذة تعديل التنبيه -->
-    <div id="edit-notif-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <!-- نافذة تعديل الإشعار -->
+    <div id="edit-notif-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>تعديل التنبيه</h3>
             <form id="edit-notif-form" class="space-y-4">
@@ -64,7 +64,7 @@
                 <textarea id="edit-notif-msg" required placeholder="نص التنبيه..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm h-20"></textarea>
                 <div class="flex gap-3">
                     <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition">حفظ التعديل</button>
-                    <button type="button" onclick="document.getElementById('edit-notif-modal').classList.add('hidden')" class="bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">إلغاء</button>
+                    <button type="button" onclick="closeEditNotifModal()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-5 py-3 rounded-xl transition">إلغاء</button>
                 </div>
             </form>
         </div>
@@ -72,17 +72,14 @@
 
     <div id="app">
         <div class="flex items-center justify-center min-h-screen">
-            <div class="flex flex-col items-center gap-4">
-                <div class="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin"></div>
-                <p class="text-slate-400 font-medium">جاري تحميل لوحة التحكم...</p>
-            </div>
+            <div class="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, getDocs, addDoc, deleteDoc, doc, updateDoc, arrayRemove, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, getDocs, addDoc, deleteDoc, doc, updateDoc, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDqapVeFxYyLJWryfqJrwBBmaIFcsCLn-w",
@@ -128,13 +125,10 @@
 
         window.closeModal = function() { document.getElementById('custom-modal').classList.add('hidden'); }
         window.closeEditModal = function() { document.getElementById('edit-modal').classList.add('hidden'); }
+        window.closeEditNotifModal = function() { document.getElementById('edit-notif-modal').classList.add('hidden'); }
 
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                renderAdminDashboard(user);
-            } else {
-                renderLogin();
-            }
+            if (user) { renderAdminDashboard(user); } else { renderLogin(); }
         });
 
         function renderLogin() {
@@ -152,26 +146,21 @@
             `;
             document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                try {
-                    await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
-                } catch (err) {
-                    showModal("خطأ في الدخول", "تأكد من البريد الإلكتروني أو كلمة المرور.", "rose");
-                }
+                await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
             });
         }
 
-        function renderAdminDashboard(user) {
+        async function renderAdminDashboard(user) {
             appDiv.innerHTML = `
                 <div class="min-h-screen p-6 md:p-10 max-w-7xl mx-auto space-y-8">
                     <header class="flex justify-between items-center pb-6 border-b border-slate-800">
                         <div>
                             <h1 class="text-2xl font-black text-white">لوحة تحكم المعلم المركزية</h1>
-                            <p class="text-slate-400 text-sm">نظام إدارة التعلم المتكامل (LMS)</p>
+                            <p class="text-slate-400 text-sm">إدارة المحاضرات، الأكواد، التنبيهات، ومتابعة الطلاب</p>
                         </div>
                         <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-rose-500 hover:text-white transition">تسجيل الخروج</button>
                     </header>
 
-                    <!-- النشر والتوليد -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
                             <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-plus-circle text-sky-400 ml-2"></i>نشر محاضرة جديدة</h3>
@@ -221,53 +210,22 @@
                         </div>
                     </div>
 
-                    <!-- إرفاق ملف PDF ورابط مباشر + سؤال اختبار -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-file-pdf text-rose-400 ml-2"></i>إرفاق ملف PDF للمحاضرة</h3>
-                            <form id="file-form" class="space-y-4">
-                                <select id="fileCourseSelect" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
-                                    <option value="">اختر المحاضرة المستهدفة</option>
-                                </select>
-                                <input type="text" id="fileTitle" required placeholder="عنوان الملزمة (مثال: ملخص الباب الأول)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                                <input type="url" id="fileUrlInput" required placeholder="رابط ملف PDF المباشر (مثل رابط Drive أو Dropbox)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
-                                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-extrabold py-3 rounded-xl transition">إرفاق الرابط بالمحاضرة</button>
-                            </form>
-                        </div>
-
-                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
-                            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-clipboard-question text-indigo-400 ml-2"></i>إضافة سؤال اختبار + وقت الامتحان</h3>
-                            <form id="quiz-form" class="space-y-3">
-                                <select id="quizCourseSelect" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs">
-                                    <option value="">اختر المحاضرة للاختبار</option>
-                                </select>
-                                <div>
-                                    <label class="block text-[11px] text-slate-400 mb-1">مدة الامتحان (بالدقائق):</label>
-                                    <input type="number" id="quizDuration" min="1" value="10" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-white text-xs" />
-                                </div>
-                                <input type="text" id="quizQuestion" required placeholder="نص السؤال" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                                <div class="grid grid-cols-2 gap-2">
-                                    <input type="text" id="opt0" required placeholder="الخيار الأول" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                                    <input type="text" id="opt1" required placeholder="الخيار الثاني" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                                    <input type="text" id="opt2" required placeholder="الخيار الثالث" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                                    <input type="text" id="opt3" required placeholder="الخيار الرابع" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                                </div>
-                                <select id="quizCorrect" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs">
-                                    <option value="0">الإجابة الصحيحة: الخيار الأول</option>
-                                    <option value="1">الإجابة الصحيحة: الخيار الثاني</option>
-                                    <option value="2">الإجابة الصحيحة: الخيار الثالث</option>
-                                    <option value="3">الإجابة الصحيحة: الخيار الرابع</option>
-                                </select>
-                                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold py-3 rounded-xl transition text-xs">إضافة السؤال</button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- إدارة التنبيهات -->
+                    <!-- إدارة التنبيهات المنشورة مع فلتر وزر حذف الكل -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <div class="flex justify-between items-center">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-bullhorn text-sky-400 ml-2"></i>التنبيهات المنشورة</h3>
-                            <button onclick="window.deleteAllNotifications()" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white font-bold px-4 py-2 rounded-xl text-xs transition">حذف الكل</button>
+                            <div class="flex gap-3 w-full md:w-auto">
+                                <select id="filter-notif-target" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs flex-1 md:w-48">
+                                    <option value="all">كل الإشعارات</option>
+                                    <option value="all_years">جميع السنوات (all)</option>
+                                    <option value="first">الصف الأول الثانوي</option>
+                                    <option value="second">الصف الثاني الثانوي</option>
+                                    <option value="third">الصف الثالث الثانوي</option>
+                                </select>
+                                <button onclick="window.deleteAllNotifications()" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition">
+                                    <i class="fa-solid fa-trash-can"></i> حذف جميع الإشعارات
+                                </button>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
@@ -286,37 +244,15 @@
                         </div>
                     </div>
 
-                    <!-- نتائج الطلاب -->
+                    <!-- طلبات تعديل البيانات -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-square-poll-vertical text-emerald-400 ml-2"></i>درجات ونتائج اختبارات الطلاب</h3>
+                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-pen text-amber-400 ml-2"></i>طلبات تعديل بيانات الطلاب المعلقة</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
-                                        <th class="p-3">الطالب</th>
-                                        <th class="p-3">المحاضرة</th>
-                                        <th class="p-3">الدرجة</th>
-                                        <th class="p-3">التقييم</th>
-                                        <th class="p-3">إعادة الامتحان</th>
-                                        <th class="p-3">الإجراء</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="quiz-results-body">
-                                    <tr><td colspan="6" class="p-4 text-center text-slate-500">جاري التحميل...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- طلبات التعديل -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-user-pen text-amber-400 ml-2"></i>طلبات تعديل البيانات</h3>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-right text-sm text-slate-300">
-                                <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
-                                    <tr>
-                                        <th class="p-3">الطالب</th>
-                                        <th class="p-3">البيانات الجديدة</th>
+                                        <th class="p-3">اسم الطالب الحالي</th>
+                                        <th class="p-3">البيانات الجديدة المطلوبة</th>
                                         <th class="p-3">الإجراء</th>
                                     </tr>
                                 </thead>
@@ -329,24 +265,40 @@
 
                     <!-- إدارة المحاضرات -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-book-open text-sky-400 ml-2"></i>إدارة المحاضرات المنشورة</h3>
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-book-open text-sky-400 ml-2"></i>إدارة المحاضرات المنشورة</h3>
+                            <select id="filter-year" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs">
+                                <option value="all">جميع السنوات الدراسية</option>
+                                <option value="first">الصف الأول الثانوي</option>
+                                <option value="second">الصف الثاني الثانوي</option>
+                                <option value="third">الصف الثالث الثانوي</option>
+                            </select>
+                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="admin-courses-grid">
                             <p class="text-slate-500">جاري التحميل...</p>
                         </div>
                     </div>
 
-                    <!-- الأكواد والطلاب -->
+                    <!-- إدارة الأكواد -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check text-sky-400 ml-2"></i>إدارة الأكواد</h3>
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check text-sky-400 ml-2"></i>إدارة الأكواد والتحكم فيها</h3>
+                            <select id="filter-code-status" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs">
+                                <option value="all">جميع الأكواد</option>
+                                <option value="available">الأكواد المتاحة</option>
+                                <option value="used">الأكواد المستخدمة</option>
+                                <option value="disabled">الأكواد المعطلة</option>
+                            </select>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
-                                        <th class="p-3">الكود</th>
-                                        <th class="p-3">المحاضرة</th>
+                                        <th class="p-3">الكود السري</th>
+                                        <th class="p-3">يتبع المحاضرة</th>
                                         <th class="p-3">الحالة</th>
                                         <th class="p-3">مستخدم بواسطة</th>
-                                        <th class="p-3">إجراءات</th>
+                                        <th class="p-3">إجراءات التحكم</th>
                                     </tr>
                                 </thead>
                                 <tbody id="codes-table-body">
@@ -356,21 +308,27 @@
                         </div>
                     </div>
 
+                    <!-- إدارة الطلاب وتصدير Excel -->
                     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>سجل الطلاب</h3>
-                            <button id="export-excel-btn" class="bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs">تنزيل Excel</button>
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-users text-sky-400 ml-2"></i>سجل الطلاب الكامل</h3>
+                            <div class="flex gap-3 w-full md:w-auto">
+                                <input type="text" id="student-search" placeholder="ابحث بالاسم، الهاتف، أو الرقم القومي..." class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs flex-1 md:w-72" />
+                                <button id="export-excel-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition cursor-pointer">
+                                    <i class="fa-solid fa-file-excel"></i> تنزيل Excel
+                                </button>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-right text-sm text-slate-300">
                                 <thead class="bg-slate-950 text-slate-400 uppercase text-xs">
                                     <tr>
-                                        <th class="p-3">الاسم</th>
-                                        <th class="p-3">الهواتف</th>
+                                        <th class="p-3">الاسم الرباعي</th>
+                                        <th class="p-3">الهواتف (طالب/أب/أم)</th>
                                         <th class="p-3">الرقم القومي</th>
-                                        <th class="p-3">المدرسة</th>
+                                        <th class="p-3">المدرسة / المحافظة</th>
                                         <th class="p-3">السنة</th>
-                                        <th class="p-3">تحكم أمني</th>
+                                        <th class="p-3">التحكم الأمني</th>
                                     </tr>
                                 </thead>
                                 <tbody id="students-table-body">
@@ -382,14 +340,14 @@
                 </div>
             `;
 
-            document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth));
+            document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-            document.getElementById('generate-btn')?.addEventListener('click', () => {
+            document.getElementById('generate-btn').addEventListener('click', () => {
                 const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
                 document.getElementById('generatedCodeInput').value = randomCode;
             });
 
-            document.getElementById('course-form')?.addEventListener('submit', async (e) => {
+            document.getElementById('course-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 await addDoc(collection(db, "courses"), {
                     title: document.getElementById('title').value,
@@ -397,66 +355,33 @@
                     academicYear: document.getElementById('academicYear').value,
                     videoUrl: document.getElementById('videoUrl').value,
                     description: document.getElementById('description').value,
-                    files: [], quiz: [], quizDuration: 10, isActive: true, createdAt: new Date()
+                    isActive: true,
+                    createdAt: new Date()
                 });
-                showModal("تم بنجاح", "تم نشر المحاضرة.");
+                showModal("تم بنجاح", "تم نشر المحاضرة بنجاح.");
                 document.getElementById('course-form').reset();
             });
 
-            document.getElementById('code-form')?.addEventListener('submit', async (e) => {
+            document.getElementById('code-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const courseId = document.getElementById('codeCourseSelect').value;
                 const code = document.getElementById('generatedCodeInput').value;
                 if (!code) { showModal("تنبيه", "الرجاء توليد كود أولاً!", "rose"); return; }
+
                 await addDoc(collection(db, "activation_codes"), {
-                    code, courseId, isUsed: false, isDisabled: false, usedBy: null, createdAt: new Date()
+                    code: code,
+                    courseId: courseId,
+                    isUsed: false,
+                    isDisabled: false,
+                    usedBy: null,
+                    createdAt: new Date()
                 });
-                showModal("تم بنجاح", "تم تفعيل الكود!");
+                showModal("تم بنجاح", "تم حفظ وتفعيل الكود بنجاح!");
                 document.getElementById('code-form').reset();
                 document.getElementById('generatedCodeInput').value = "";
             });
 
-            document.getElementById('file-form')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const courseId = document.getElementById('fileCourseSelect').value;
-                const title = document.getElementById('fileTitle').value;
-                const urlInput = document.getElementById('fileUrlInput').value.trim();
-                
-                if (!urlInput) {
-                    showModal("تنبيه", "الرجاء إدخال رابط ملف PDF مباشر!", "rose");
-                    return;
-                }
-
-                const target = adminCourses.find(c => c.id === courseId);
-                const currentFiles = target ? (target.files || []) : [];
-                currentFiles.push({ id: Date.now().toString(), title, url: urlInput });
-                await updateDoc(doc(db, "courses", courseId), { files: currentFiles });
-                
-                showModal("تم بنجاح", "تم إرفاق الملف بالمحاضرة بنجاح ويظهر الآن للطلاب!");
-                document.getElementById('file-form').reset();
-            });
-
-            document.getElementById('quiz-form')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const courseId = document.getElementById('quizCourseSelect').value;
-                const duration = parseInt(document.getElementById('quizDuration').value) || 10;
-                const question = document.getElementById('quizQuestion').value;
-                const options = [
-                    document.getElementById('opt0').value, document.getElementById('opt1').value,
-                    document.getElementById('opt2').value, document.getElementById('opt3'].value
-                ];
-                const correct = parseInt(document.getElementById('quizCorrect').value);
-
-                const target = adminCourses.find(c => c.id === courseId);
-                const currentQuiz = target ? (target.quiz || []) : [];
-                currentQuiz.push({ id: Date.now().toString(), question, options, correct });
-
-                await updateDoc(doc(db, "courses", courseId), { quiz: currentQuiz, quizDuration: duration });
-                showModal("تم بنجاح", "تم إضافة السؤال بنجاح!");
-                document.getElementById('quiz-form').reset();
-            });
-
-            document.getElementById('notification-form')?.addEventListener('submit', async (e) => {
+            document.getElementById('notification-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 await addDoc(collection(db, "notifications"), {
                     title: document.getElementById('notif-title').value,
@@ -468,21 +393,36 @@
                 document.getElementById('notification-form').reset();
             });
 
-            document.getElementById('edit-course-form')?.addEventListener('submit', async (e) => {
+            document.getElementById('edit-course-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const id = document.getElementById('edit-course-id').value;
                 await updateDoc(doc(db, "courses", id), {
-                    title: document.getElementById('edit-title').value, subject: document.getElementById('edit-subject').value,
-                    academicYear: document.getElementById('edit-academicYear').value, videoUrl: document.getElementById('edit-videoUrl').value,
+                    title: document.getElementById('edit-title').value,
+                    subject: document.getElementById('edit-subject').value,
+                    academicYear: document.getElementById('edit-academicYear').value,
+                    videoUrl: document.getElementById('edit-videoUrl').value,
                     description: document.getElementById('edit-description').value
                 });
                 closeEditModal();
-                showModal("تم بنجاح", "تم التعديل بنجاح!");
+                showModal("تم بنجاح", "تم تعديل بيانات المحاضرة بنجاح!");
+            });
+
+            document.getElementById('edit-notif-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('edit-notif-id').value;
+                await updateDoc(doc(db, "notifications", id), {
+                    title: document.getElementById('edit-notif-title').value,
+                    targetYear: document.getElementById('edit-notif-target').value,
+                    message: document.getElementById('edit-notif-msg').value
+                });
+                closeEditNotifModal();
+                showModal("تم بنجاح", "تم تعديل التنبيه بنجاح!");
             });
 
             document.getElementById('export-excel-btn')?.addEventListener('click', async () => {
                 try {
                     const usersSnap = await getDocs(collection(db, "users"));
+                    if (usersSnap.empty) { showModal("تنبيه", "لا توجد بيانات طلاب لتصديرها!", "rose"); return; }
                     let csvContent = "الاسم الرباعي,هاتف الطالب,هاتف الأب,هاتف الأم,الرقم القومي,المدرسة,المحافظة,السنة الدراسية\n";
                     usersSnap.forEach(docSnap => {
                         const st = docSnap.data();
@@ -491,244 +431,223 @@
                     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement("a");
-                    link.setAttribute("href", url); link.setAttribute("download", "students_database.csv");
-                    document.body.appendChild(link); link.click(); document.body.removeChild(link);
-                } catch (err) { showModal("خطأ", "حدث خطأ: " + err.message, "rose"); }
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", "students_database.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (err) {
+                    showModal("خطأ", "حدث خطأ أثناء تنزيل الملف: " + err.message, "rose");
+                }
             });
 
-            setupAdminRealtimeData();
+            document.getElementById('filter-year').addEventListener('change', setupRealtimeListeners);
+            document.getElementById('filter-code-status').addEventListener('change', setupRealtimeListeners);
+            document.getElementById('filter-notif-target').addEventListener('change', setupRealtimeListeners);
+            document.getElementById('student-search').addEventListener('input', setupRealtimeListeners);
+
+            setupRealtimeListeners();
         }
 
-        let adminCourses = [];
-        let adminCodes = [];
-        let adminUsers = [];
-        let adminNotifications = [];
-        let adminRequests = [];
-        let adminResults = [];
         let coursesMap = {};
 
-        function setupAdminRealtimeData() {
-            onSnapshot(collection(db, "courses"), (snap) => {
-                adminCourses = [];
-                snap.forEach(d => adminCourses.push({ id: d.id, ...d.data() }));
-                renderAdminUI();
-            });
-            onSnapshot(collection(db, "activation_codes"), (snap) => {
-                adminCodes = [];
-                snap.forEach(d => adminCodes.push({ id: d.id, ...d.data() }));
-                renderAdminUI();
-            });
-            onSnapshot(collection(db, "users"), (snap) => {
-                adminUsers = [];
-                snap.forEach(d => adminUsers.push({ id: d.id, ...d.data() }));
-                renderAdminUI();
-            });
-            onSnapshot(collection(db, "notifications"), (snap) => {
-                adminNotifications = [];
-                snap.forEach(d => adminNotifications.push({ id: d.id, ...d.data() }));
-                renderAdminUI();
-            });
-            onSnapshot(collection(db, "profile_requests"), (snap) => {
-                adminRequests = [];
-                snap.forEach(d => adminRequests.push({ id: d.id, ...d.data() }));
-                renderAdminUI();
-            });
-            onSnapshot(collection(db, "quiz_results"), (snap) => {
-                adminResults = [];
-                snap.forEach(d => adminResults.push({ id: d.id, ...d.data() }));
-                renderAdminUI();
-            });
-        }
+        function setupRealtimeListeners() {
+            onSnapshot(collection(db, "courses"), (coursesSnap) => {
+                const select = document.getElementById('codeCourseSelect');
+                const coursesGrid = document.getElementById('admin-courses-grid');
+                const yearFilter = document.getElementById('filter-year')?.value || 'all';
+                
+                let selectHtml = '<option value="">اختر المحاضرة المراد توليد كود لها</option>';
+                let coursesHtml = '';
+                coursesMap = {};
 
-        function renderAdminUI() {
-            const select = document.getElementById('codeCourseSelect');
-            const fileSelect = document.getElementById('fileCourseSelect');
-            const quizSelect = document.getElementById('quizCourseSelect');
-            const coursesGrid = document.getElementById('admin-courses-grid');
+                coursesSnap.forEach(docSnap => {
+                    const c = docSnap.data();
+                    const id = docSnap.id;
+                    const yearText = c.academicYear === 'third' ? 'الثالث الثانوي' : c.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي';
+                    coursesMap[id] = { title: c.title, year: yearText };
+                    const isActive = c.isActive !== false;
 
-            if (!coursesGrid) return;
+                    selectHtml += `<option value="${id}">${c.title} (${c.subject})</option>`;
 
-            let selectHtml = '<option value="">اختر المحاضرة</option>';
-            let fileSelectHtml = '<option value="">اختر المحاضرة</option>';
-            let quizSelectHtml = '<option value="">اختر المحاضرة</option>';
-            let coursesHtml = '';
-            coursesMap = {};
-
-            adminCourses.forEach(c => {
-                const yearText = c.academicYear === 'third' ? 'الثالث الثانوي' : c.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي';
-                coursesMap[c.id] = { title: c.title, year: yearText };
-                const isActive = c.isActive !== false;
-
-                selectHtml += `<option value="${c.id}">${c.title}</option>`;
-                fileSelectHtml += `<option value="${c.id}">${c.title}</option>`;
-                quizSelectHtml += `<option value="${c.id}">${c.title}</option>`;
-
-                let filesListHtml = (c.files || []).map(f => `
-                    <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
-                        <span class="truncate max-w-[150px] text-rose-300">${f.title}</span>
-                        <button onclick="window.deleteCourseFile('${c.id}', '${f.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد ملفات</span>';
-
-                let quizListHtml = (c.quiz || []).map((q, qIdx) => `
-                    <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
-                        <span class="truncate max-w-[120px] text-indigo-300">س${qIdx+1}: ${q.question}</span>
-                        <button onclick="window.deleteQuizQuestion('${c.id}', '${q.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد أسئلة</span>';
-
-                coursesHtml += `
-                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3">
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
-                                <span class="text-xs px-2 py-0.5 rounded-md font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${isActive ? 'نشطة' : 'متوقفة'}</span>
+                    if (yearFilter === 'all' || c.academicYear === yearFilter) {
+                        coursesHtml += `
+                            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-xs bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-lg font-bold">${c.subject}</span>
+                                        <span class="text-xs px-2 py-0.5 rounded-md font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+                                            ${isActive ? 'نشطة' : 'متوقفة'}
+                                        </span>
+                                    </div>
+                                    <h4 class="text-base font-bold text-white">${c.title}</h4>
+                                    <p class="text-slate-400 text-xs mt-1">السنة: ${yearText}</p>
+                                </div>
+                                <div class="mt-4 grid grid-cols-3 gap-2">
+                                    <button onclick="window.openEditModal('${id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold hover:bg-sky-500 hover:text-slate-950 transition">تعديل</button>
+                                    <button onclick="window.toggleCourseStatus('${id}', ${isActive})" class="bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-xl font-bold transition">
+                                        ${isActive ? 'إيقاف' : 'تشغيل'}
+                                    </button>
+                                    <button onclick="window.deleteCourse('${id}')" class="bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
+                                </div>
                             </div>
-                            <h4 class="text-base font-bold text-white">${c.title}</h4>
-                            <p class="text-slate-400 text-xs mt-1">السنة: ${yearText} | الوقت: ${c.quizDuration || 10} د</p>
-                            <div class="mt-3 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الملفات:</p><div class="max-h-24 overflow-y-auto">${filesListHtml}</div></div>
-                            <div class="mt-2 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الامتحان:</p><div class="max-h-24 overflow-y-auto">${quizListHtml}</div></div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2 pt-2">
-                            <button onclick="window.openEditModal('${c.id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold">تعديل</button>
-                            <button onclick="window.toggleCourseStatus('${c.id}', ${isActive})" class="bg-slate-800 text-xs py-2 rounded-xl font-bold">${isActive ? 'إيقاف' : 'تشغيل'}</button>
-                            <button onclick="window.deleteCourse('${c.id}')" class="bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold">حذف</button>
-                        </div>
-                    </div>
-                `;
+                        `;
+                    }
+                });
+                if(select) select.innerHTML = selectHtml;
+                if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات مطابقة</p>';
+                
+                loadCodesAndStudents();
             });
 
-            if(select) select.innerHTML = selectHtml;
-            if(fileSelect) fileSelect.innerHTML = fileSelectHtml;
-            if(quizSelect) quizSelect.innerHTML = quizSelectHtml;
-            if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات</p>';
+            onSnapshot(collection(db, "notifications"), (notifSnap) => {
+                const notifBody = document.getElementById('admin-notifications-body');
+                const notifFilter = document.getElementById('filter-notif-target')?.value || 'all';
+                let notifHtml = '';
 
-            const reqTbody = document.getElementById('requests-table-body');
-            let reqHtml = '';
-            adminRequests.forEach(req => {
-                if (req.status === 'pending') {
-                    reqHtml += `
-                        <tr class="border-b border-slate-800/60">
-                            <td class="p-3 font-bold text-white">${req.currentName}</td>
-                            <td class="p-3 text-xs">الاسم: ${req.newFullName} | هاتف: ${req.newStudentPhone}</td>
-                            <td class="p-3 flex gap-2">
-                                <button onclick="window.approveRequest('${req.id}', '${req.userId}', '${req.newFullName}', '${req.newStudentPhone}', '${req.newFatherPhone}', '${req.newMotherPhone}', '${req.newSchool}', '${req.newGovernorate}')" class="bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold text-white">موافقة</button>
-                                <button onclick="window.rejectRequest('${req.id}', '${req.userId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold">رفض</button>
-                            </td>
-                        </tr>
-                    `;
-                }
+                notifSnap.forEach(docSnap => {
+                    const n = docSnap.data();
+                    const nId = docSnap.id;
+                    const targetText = n.targetYear === 'all' ? 'جميع السنوات' : (n.targetYear === 'third' ? 'الثالث الثانوي' : n.targetYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي');
+                    
+                    let matchesNotifFilter = true;
+                    if (notifFilter === 'all_years' && n.targetYear !== 'all') matchesNotifFilter = false;
+                    if (notifFilter !== 'all' && notifFilter !== 'all_years' && n.targetYear !== notifFilter) matchesNotifFilter = false;
+
+                    if (matchesNotifFilter) {
+                        notifHtml += `
+                            <tr class="border-b border-slate-800/60">
+                                <td class="p-3 font-bold text-white">${n.title}</td>
+                                <td class="p-3 text-xs text-sky-400">${targetText}</td>
+                                <td class="p-3 text-xs truncate max-w-xs">${n.message}</td>
+                                <td class="p-3 flex gap-2">
+                                    <button onclick="window.openEditNotifModal('${nId}', '${n.title}', '${n.targetYear}', '${n.message}')" class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-xs font-bold transition hover:bg-sky-500 hover:text-slate-950">تعديل</button>
+                                    <button onclick="window.deleteNotification('${nId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold transition hover:bg-rose-500 hover:text-white">حذف</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+                if(notifBody) notifBody.innerHTML = notifHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد تنبيهات مطابقة للفلاتر</td></tr>';
             });
-            if(reqTbody) reqTbody.innerHTML = reqHtml || '<tr><td colspan="3" class="p-4 text-center text-slate-500">لا توجد طلبات معلقة</td></tr>';
 
-            let studentsMap = {};
-            adminUsers.forEach(st => { studentsMap[st.id] = `${st.fullName || 'بدون اسم'} / ${st.studentPhone || '-'}`; });
-
-            const studentsTbody = document.getElementById('students-table-body');
-            let studentsHtml = '';
-            adminUsers.forEach(st => {
-                const isDeviceBlocked = st.deviceBlocked || false;
-                studentsHtml += `
-                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                        <td class="p-3 font-bold text-white">${st.fullName}</td>
-                        <td class="p-3 text-xs">طالب: ${st.studentPhone || '-'}</td>
-                        <td class="p-3 font-mono text-xs">${st.nationalId || '-'}</td>
-                        <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
-                        <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث' : st.academicYear === 'second' ? 'الثاني' : 'الأول'} الثانوي</td>
-                        <td class="p-3"><button onclick="window.toggleDeviceBlock('${st.id}', ${isDeviceBlocked})" class="bg-slate-800 text-xs px-3 py-1.5 rounded-lg font-bold">${isDeviceBlocked ? 'رفع الحظر' : 'حظر'}</button></td>
-                    </tr>
-                `;
-            });
-            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد طلاب</td></tr>';
-
-            const codesTbody = document.getElementById('codes-table-body');
-            let codesHtml = '';
-            adminCodes.forEach(codeObj => {
-                const courseInfo = coursesMap[codeObj.courseId] || { title: 'محاضرة محذوفة', year: '-' };
-                const courseLabel = `${courseInfo.title} / ${courseInfo.year}`;
-                const isDisabled = codeObj.isDisabled || false;
-                const isUsed = codeObj.isUsed || false;
-                const studentDetails = codeObj.usedBy ? (studentsMap[codeObj.usedBy] || codeObj.usedBy) : 'لا يوجد';
-                codesHtml += `
-                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                        <td class="p-3 font-mono text-amber-400 font-bold">${codeObj.code}</td>
-                        <td class="p-3 text-xs text-sky-300">${courseLabel}</td>
-                        <td class="p-3">${isUsed ? 'مستخدم' : (isDisabled ? 'معطل' : 'متاح')}</td>
-                        <td class="p-3 text-xs text-slate-300">${studentDetails}</td>
-                        <td class="p-3 flex gap-2">
-                            <button onclick="window.toggleCodeStatus('${codeObj.id}', ${isDisabled})" class="bg-slate-800 px-3 py-1 rounded-lg text-xs font-bold">${isDisabled ? 'تفعيل' : 'تعطيل'}</button>
-                            <button onclick="window.deleteCode('${codeObj.id}', '${codeObj.usedBy || ''}', '${codeObj.courseId || ''}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد أكواد</td></tr>';
-
-            const notifBody = document.getElementById('admin-notifications-body');
-            let notifHtml = '';
-            adminNotifications.forEach(n => {
-                notifHtml += `
-                    <tr class="border-b border-slate-800/60">
-                        <td class="p-3 font-bold text-white">${n.title}</td>
-                        <td class="p-3 text-xs text-sky-400">${n.targetYear}</td>
-                        <td class="p-3 text-xs truncate max-w-xs">${n.message}</td>
-                        <td class="p-3"><button onclick="window.deleteNotification('${n.id}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button></td>
-                    </tr>
-                `;
-            });
-            if(notifBody) notifBody.innerHTML = notifHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد تنبيهات</td></tr>';
-
-            const resultsBody = document.getElementById('quiz-results-body');
-            let resHtml = '';
-            adminResults.forEach(r => {
-                const canRetake = r.canRetake || false;
-                const percentage = Math.round((r.score / r.total) * 100);
-                resHtml += `
-                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
-                        <td class="p-3 font-bold text-white">${r.studentName}</td>
-                        <td class="p-3 text-xs text-sky-400">${r.courseTitle}</td>
-                        <td class="p-3 font-mono font-bold text-amber-400">${r.score} / ${r.total} (${percentage}%)</td>
-                        <td class="p-3"><span class="text-xs px-2.5 py-1 rounded-lg border font-bold">${percentage >= 50 ? 'ناجح' : 'راسب'}</span></td>
-                        <td class="p-3"><button onclick="window.toggleQuizRetake('${r.id}', ${canRetake})" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${canRetake ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}">${canRetake ? 'مسموح بالإعادة' : 'السماح بالإعادة'}</button></td>
-                        <td class="p-3"><button onclick="window.deleteQuizResult('${r.id}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button></td>
-                    </tr>
-                `;
-            });
-            if(resultsBody) resultsBody.innerHTML = resHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج</td></tr>';
-        }
-
-        window.deleteCourseFile = async function(courseId, fileId) {
-            showModal("تأكيد الحذف", "حذف هذا الملف؟", "rose", async () => {
-                const target = adminCourses.find(c => c.id === courseId);
-                if(target && target.files) {
-                    const newFiles = target.files.filter(f => f.id !== fileId);
-                    await updateDoc(doc(db, "courses", courseId), { files: newFiles });
-                }
+            onSnapshot(collection(db, "profile_requests"), (reqSnap) => {
+                const reqTbody = document.getElementById('requests-table-body');
+                let reqHtml = '';
+                reqSnap.forEach(docSnap => {
+                    const req = docSnap.data();
+                    const reqId = docSnap.id;
+                    if (req.status === 'pending') {
+                        reqHtml += `
+                            <tr class="border-b border-slate-800/60">
+                                <td class="p-3 font-bold text-white">${req.currentName}</td>
+                                <td class="p-3 text-xs space-y-1">
+                                    الاسم: <span class="text-sky-400">${req.newFullName}</span><br>
+                                    هاتف الطالب: <span class="text-sky-400">${req.newStudentPhone}</span><br>
+                                    المدرسة / المحافظة: <span class="text-sky-400">${req.newSchool} / ${req.newGovernorate}</span>
+                                </td>
+                                <td class="p-3 flex gap-2">
+                                    <button onclick="window.approveRequest('${reqId}', '${req.userId}', '${req.newFullName}', '${req.newStudentPhone}', '${req.newFatherPhone}', '${req.newMotherPhone}', '${req.newSchool}', '${req.newGovernorate}')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-xs font-bold transition text-white">موافقة</button>
+                                    <button onclick="window.rejectRequest('${reqId}', '${req.userId}')" class="bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold transition">رفض</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+                if(reqTbody) reqTbody.innerHTML = reqHtml || '<tr><td colspan="3" class="p-4 text-center text-slate-500">لا توجد طلبات تعديل معلقة حالياً</td></tr>';
             });
         }
 
-        window.deleteQuizQuestion = async function(courseId, qId) {
-            showModal("تأكيد الحذف", "حذف هذا السؤال؟", "rose", async () => {
-                const target = adminCourses.find(c => c.id === courseId);
-                if(target && target.quiz) {
-                    const newQuiz = target.quiz.filter(q => q.id !== qId);
-                    await updateDoc(doc(db, "courses", courseId), { quiz: newQuiz });
-                }
+        function loadCodesAndStudents() {
+            onSnapshot(collection(db, "users"), (usersSnap) => {
+                const studentsTbody = document.getElementById('students-table-body');
+                const searchTerm = document.getElementById('student-search')?.value.toLowerCase() || '';
+                let studentsHtml = '';
+                let studentsMap = {};
+
+                usersSnap.forEach(docSnap => {
+                    const st = docSnap.data();
+                    const stId = docSnap.id;
+                    studentsMap[stId] = `${st.fullName || 'بدون اسم'} / ${st.studentPhone || '-'}`;
+
+                    const fullName = (st.fullName || '').toLowerCase();
+                    const phone = (st.studentPhone || '').toLowerCase();
+                    const nationalId = (st.nationalId || '').toLowerCase();
+
+                    if (searchTerm === '' || fullName.includes(searchTerm) || phone.includes(searchTerm) || nationalId.includes(searchTerm)) {
+                        const isDeviceBlocked = st.deviceBlocked || false;
+                        studentsHtml += `
+                            <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                                <td class="p-3 font-bold text-white">${st.fullName}</td>
+                                <td class="p-3 text-xs">
+                                    طالب: <span class="font-mono text-sky-400">${st.studentPhone || '-'}</span><br>
+                                    أب: <span class="font-mono">${st.fatherPhone || '-'}</span> | أم: <span class="font-mono">${st.motherPhone || '-'}</span>
+                                </td>
+                                <td class="p-3 font-mono text-xs">${st.nationalId || '-'}</td>
+                                <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
+                                <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث' : st.academicYear === 'second' ? 'الثاني' : 'الأول'} الثانوي</td>
+                                <td class="p-3 flex items-center gap-2">
+                                    ${isDeviceBlocked ? '<span class="text-rose-400 text-xs font-bold">محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">مسموح</span>'}
+                                    <button onclick="window.toggleDeviceBlock('${stId}', ${isDeviceBlocked})" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-lg font-bold transition">
+                                        ${isDeviceBlocked ? 'رفع الحظر' : 'حظر الجهاز'}
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+                if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مطابقة للبحث</td></tr>';
+
+                onSnapshot(collection(db, "activation_codes"), (codesSnap) => {
+                    const codesTbody = document.getElementById('codes-table-body');
+                    const codeStatusFilter = document.getElementById('filter-code-status')?.value || 'all';
+                    let codesHtml = '';
+
+                    codesSnap.forEach(docSnap => {
+                        const codeObj = docSnap.data();
+                        const codeId = docSnap.id;
+                        const courseInfo = coursesMap[codeObj.courseId] || { title: 'محاضرة محذوفة', year: '-' };
+                        const courseLabel = `${courseInfo.title} / ${courseInfo.year}`;
+                        
+                        const isDisabled = codeObj.isDisabled || false;
+                        const isUsed = codeObj.isUsed || false;
+
+                        let matchesFilter = true;
+                        if (codeStatusFilter === 'available' && (isUsed || isDisabled)) matchesFilter = false;
+                        if (codeStatusFilter === 'used' && !isUsed) matchesFilter = false;
+                        if (codeStatusFilter === 'disabled' && !isDisabled) matchesFilter = false;
+
+                        if (matchesFilter) {
+                            const studentDetails = codeObj.usedBy ? (studentsMap[codeObj.usedBy] || codeObj.usedBy) : 'لا يوجد';
+                            codesHtml += `
+                                <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                                    <td class="p-3 font-mono text-amber-400 font-bold">${codeObj.code}</td>
+                                    <td class="p-3 text-xs text-sky-300 font-semibold">${courseLabel}</td>
+                                    <td class="p-3">
+                                        ${isUsed ? '<span class="bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-lg text-xs font-bold">مستخدم</span>' : (isDisabled ? '<span class="bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-bold">معطل</span>' : '<span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-lg text-xs font-bold">متاح</span>')}
+                                    </td>
+                                    <td class="p-3 text-xs text-slate-300">${studentDetails}</td>
+                                    <td class="p-3 flex gap-2">
+                                        <button onclick="window.toggleCodeStatus('${codeId}', ${isDisabled})" class="bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-lg text-xs font-bold transition">
+                                            ${isDisabled ? 'تفعيل' : 'تعطيل'}
+                                        </button>
+                                        <button onclick="window.deleteCode('${codeId}', '${codeObj.usedBy || ''}', '${codeObj.courseId || ''}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold hover:bg-rose-500 hover:text-white transition">حذف</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    });
+                    if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد أكواد مطابقة للفلتر</td></tr>';
+                });
             });
         }
-
-        window.toggleQuizRetake = async function(resultId, currentStatus) {
-            await updateDoc(doc(db, "quiz_results", resultId), { canRetake: !currentStatus });
-        };
-
-        window.deleteQuizResult = async function(resultId) {
-            showModal("تأكيد الحذف", "حذف هذه النتيجة؟", "rose", async () => { await deleteDoc(doc(db, "quiz_results", resultId)); });
-        };
 
         window.deleteAllNotifications = async function() {
-            showModal("تأكيد الحذف", "حذف جميع الإشعارات؟", "rose", async () => {
-                const promises = adminNotifications.map(n => deleteDoc(doc(db, "notifications", n.id)));
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف جميع الإشعارات المنشورة نهائياً؟", "rose", async () => {
+                const snap = await getDocs(collection(db, "notifications"));
+                const promises = snap.docs.map(d => deleteDoc(doc(db, "notifications", d.id)));
                 await Promise.all(promises);
+                showModal("تم الحذف", "تم حذف جميع الإشعارات بنجاح.");
             });
         }
 
@@ -742,6 +661,14 @@
             document.getElementById('edit-modal').classList.remove('hidden');
         }
 
+        window.openEditNotifModal = function(id, title, targetYear, message) {
+            document.getElementById('edit-notif-id').value = id;
+            document.getElementById('edit-notif-title').value = title;
+            document.getElementById('edit-notif-target').value = targetYear;
+            document.getElementById('edit-notif-msg').value = message;
+            document.getElementById('edit-notif-modal').classList.remove('hidden');
+        }
+
         window.toggleCourseStatus = async function(id, currentStatus) {
             await updateDoc(doc(db, "courses", id), { isActive: !currentStatus });
         };
@@ -751,17 +678,25 @@
         };
 
         window.deleteCourse = async function(id) {
-            showModal("تأكيد الحذف", "حذف المحاضرة؟", "rose", async () => { await deleteDoc(doc(db, "courses", id)); });
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذه المحاضرة نهائياً؟", "rose", async () => {
+                await deleteDoc(doc(db, "courses", id));
+            });
         };
 
         window.deleteNotification = async function(id) {
-            showModal("تأكيد الحذف", "حذف التنبيه؟", "rose", async () => { await deleteDoc(doc(db, "notifications", id)); });
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا التنبيه؟", "rose", async () => {
+                await deleteDoc(doc(db, "notifications", id));
+            });
         };
 
         window.deleteCode = async function(id, usedByUserId, courseId) {
-            showModal("تأكيد الحذف", "حذف الكود؟", "rose", async () => {
+            showModal("تأكيد الحذف", "هل أنت متأكد من حذف هذا الكود نهائياً؟ سيتم غلق المحاضرة من عند الطالب.", "rose", async () => {
                 if (usedByUserId && courseId) {
-                    try { await updateDoc(doc(db, "users", usedByUserId), { unlockedCourses: arrayRemove(courseId) }); } catch(e){}
+                    try {
+                        await updateDoc(doc(db, "users", usedByUserId), {
+                            unlockedCourses: arrayRemove(courseId)
+                        });
+                    } catch (err) { console.log(err); }
                 }
                 await deleteDoc(doc(db, "activation_codes", id));
             });
@@ -773,22 +708,36 @@
 
         window.approveRequest = async function(reqId, userId, newName, newStudentPhone, newFatherPhone, newMotherPhone, newSchool, newGovernorate) {
             await updateDoc(doc(db, "users", userId), {
-                fullName: newName, studentPhone: newStudentPhone, fatherPhone: newFatherPhone,
-                motherPhone: newMotherPhone, school: newSchool, governorate: newGovernorate
+                fullName: newName,
+                studentPhone: newStudentPhone,
+                fatherPhone: newFatherPhone,
+                motherPhone: newMotherPhone,
+                school: newSchool,
+                governorate: newGovernorate
             });
             await updateDoc(doc(db, "profile_requests", reqId), { status: 'approved' });
+            
             await addDoc(collection(db, "notifications"), {
-                title: "تمت الموافقة على تعديل البيانات", message: "تم تحديث بياناتك بنجاح.", targetUserId: userId, createdAt: new Date()
+                title: "تمت الموافقة على تعديل البيانات",
+                message: "قامت الإدارة بالموافقة على طلب تحديث بياناتك الشخصية بنجاح.",
+                targetUserId: userId,
+                createdAt: new Date()
             });
-            showModal("تم", "تمت الموافقة بنجاح.");
+
+            showModal("تم بنجاح", "تم الموافقة على تحديث بيانات الطالب.");
         };
 
         window.rejectRequest = async function(reqId, userId) {
             await updateDoc(doc(db, "profile_requests", reqId), { status: 'rejected' });
+            
             await addDoc(collection(db, "notifications"), {
-                title: "تم رفض طلب تعديل البيانات", message: "عذراً، تم رفض طلبك.", targetUserId: userId, createdAt: new Date()
+                title: "تم رفض طلب تعديل البيانات",
+                message: "عذراً، قامت الإدارة برفض طلب تحديث بياناتك.",
+                targetUserId: userId,
+                createdAt: new Date()
             });
-            showModal("تم", "تم الرفض.");
+
+            showModal("تم الرفض", "تم رفض طلب التعديل وإبلاغ الطالب.");
         };
     </script>
 </body>
