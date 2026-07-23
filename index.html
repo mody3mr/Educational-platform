@@ -7,15 +7,32 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Cairo', sans-serif; } </style>
+    <style>
+        body { font-family: 'Cairo', sans-serif; user-select: none; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-sky-500 selection:text-slate-950">
+
+    <!-- نافذة منبثقة مخصصة بدل التنبيهات البدائية -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
+            <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <h3 id="modal-title" class="text-lg font-bold text-white mb-2">تنبيه النظام</h3>
+            <p id="modal-text" class="text-slate-400 text-sm mb-6">رسالة توضيحية...</p>
+            <button onclick="closeModal()" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3 rounded-xl transition">حسناً</button>
+        </div>
+    </div>
 
     <div id="app">
         <div class="flex items-center justify-center min-h-screen">
             <div class="flex flex-col items-center gap-4">
                 <div class="w-12 h-12 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin"></div>
-                <p class="text-slate-400 font-medium">جاري تحميل المنصة...</p>
+                <p class="text-slate-400 font-medium">جاري تهيئة المنصة الآمنة...</p>
             </div>
         </div>
     </div>
@@ -39,12 +56,45 @@
         const db = getFirestore(app);
         const appDiv = document.getElementById('app');
 
+        // حماية متقدمة ضد السكرين شوت والنسخ وتصوير الشاشة
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'PrintScreen' || (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
+                e.preventDefault();
+                showModal("تنبيه أمني", "عذراً، عمليات التصوير أو النسخ أو فحص الشاشة محظورة حماية لحقوق المعلم.", "rose");
+            }
+        });
+
+        window.showModal = function(title, text, type = "sky") {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerText = text;
+            const iconDiv = document.getElementById('modal-icon');
+            if(type === "rose") {
+                iconDiv.className = "w-14 h-14 bg-rose-500/20 text-rose-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl";
+                iconDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                iconDiv.className = "w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl";
+                iconDiv.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+            }
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        window.closeModal = function() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 const userDocRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userDocRef);
                 if (userSnap.exists()) {
-                    renderDashboard(user, userSnap.data());
+                    const userData = userSnap.data();
+                    if(userData.isBlocked) {
+                        signOut(auth);
+                        showModal("حساب محظور", "عذراً، تم حظرك من قبل إدارة المنصة. تواصل مع الدعم الفني.", "rose");
+                        return;
+                    }
+                    renderDashboard(user, userData);
                 } else {
                     renderProfileForm(user);
                 }
@@ -66,7 +116,6 @@
                             <input type="password" id="password" required placeholder="كلمة المرور (6 أحرف فأكثر)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
                             <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3 rounded-xl transition">دخول / إنشاء حساب</button>
                         </form>
-                        <div id="err" class="text-rose-400 text-xs mt-3 text-center font-bold"></div>
                     </div>
                 </div>
             `;
@@ -79,8 +128,8 @@
                 } catch {
                     try {
                         await createUserWithEmailAndPassword(auth, email, pass);
-                    } catch (err) {
-                        document.getElementById('err').innerText = "حدث خطأ في التسجيل، تأكد من صحة البيانات.";
+                    } catch {
+                        showModal("خطأ في المصادقة", "تأكد من كتابة البريد بشكل صحيح أو أن كلمة المرور 6 أحرف على الأقل.", "rose");
                     }
                 }
             });
@@ -90,13 +139,14 @@
             appDiv.innerHTML = `
                 <div class="min-h-screen flex items-center justify-center p-6">
                     <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
-                        <h2 class="text-2xl font-black text-white mb-2">استكمال بيانات الطالب</h2>
-                        <p class="text-slate-400 text-sm mb-6">هذه الخطوة تطلب مرة واحدة فقط.</p>
+                        <h2 class="text-2xl font-black text-white mb-2">استكمال بيانات الطالب الشخصية</h2>
+                        <p class="text-slate-400 text-sm mb-6">هذه البيانات تُسجل مرة واحدة وترتبط بحسابك للأبد.</p>
                         <form id="profile-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" id="fullName" required placeholder="الاسم الرباعي" class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
                             <input type="tel" id="studentPhone" required placeholder="رقم هاتف الطالب" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
                             <input type="tel" id="fatherPhone" required placeholder="رقم هاتف الأب" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
                             <input type="tel" id="motherPhone" required placeholder="رقم هاتف الأم" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                            <input type="text" id="nationalId" required placeholder="الرقم القومي (14 رقم)" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
                             <input type="text" id="school" required placeholder="اسم المدرسة" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
                             <input type="text" id="governorate" required placeholder="المحافظة" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
                             <select id="academicYear" class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
@@ -104,23 +154,43 @@
                                 <option value="second">الصف الثاني الثانوي</option>
                                 <option value="third">الصف الثالث الثانوي</option>
                             </select>
-                            <button type="submit" class="md:col-span-2 bg-sky-500 text-slate-950 font-bold py-3.5 rounded-xl">حفظ ودخول المنصة</button>
+                            <button type="submit" class="md:col-span-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3.5 rounded-xl transition">حفظ البيانات والانتقال للمنصة</button>
                         </form>
                     </div>
                 </div>
             `;
+
             document.getElementById('profile-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const studentPhone = document.getElementById('studentPhone').value.trim();
+                const nationalId = document.getElementById('nationalId').value.trim();
+
+                // فحص عدم تكرار رقم الهاتف أو الرقم القومي في قاعدة البيانات
+                const usersRef = collection(db, "users");
+                const qPhone = query(usersRef, where("studentPhone", "==", studentPhone));
+                const qId = query(usersRef, where("nationalId", "==", nationalId));
+                
+                const phoneSnap = await getDocs(qPhone);
+                const idSnap = await getDocs(qId);
+
+                if (!phoneSnap.empty || !idSnap.empty) {
+                    showModal("تنبيه تكرار الحساب", "رقم الهاتف أو الرقم القومي مُسجل مسبقاً بحساب آخر في النظام!", "rose");
+                    return;
+                }
+
                 const data = {
                     fullName: document.getElementById('fullName').value,
-                    studentPhone: document.getElementById('studentPhone').value,
+                    studentPhone: studentPhone,
                     fatherPhone: document.getElementById('fatherPhone').value,
                     motherPhone: document.getElementById('motherPhone').value,
+                    nationalId: nationalId,
                     school: document.getElementById('school').value,
                     governorate: document.getElementById('governorate').value,
                     academicYear: document.getElementById('academicYear').value,
-                    unlockedCourses: []
+                    unlockedCourses: [],
+                    isBlocked: false
                 };
+
                 await setDoc(doc(db, "users", user.uid), data);
                 renderDashboard(user, data);
             });
@@ -145,24 +215,41 @@
                                 <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold bg-sky-500 text-slate-950">
                                     <i class="fa-solid fa-play-circle"></i> كورساتي المفعلة
                                 </a>
-                                <a href="#" onclick="alert('قسم الاختبارات قادم قريبأً!')" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800">
+                                <a href="#" onclick="showModal('تنبيه', 'قسم الاختبارات قريبأً!', 'sky')" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800">
                                     <i class="fa-solid fa-clipboard-question"></i> الاختبارات والواجبات
                                 </a>
                             </nav>
                         </div>
                     </aside>
 
-                    <!-- المحتوى -->
+                    <!-- المحتوى الرئيسي -->
                     <main class="flex-1 p-6 md:p-10 overflow-y-auto">
-                        <header class="flex justify-between items-center mb-8 pb-6 border-b border-slate-800">
+                        <header class="flex justify-between items-center mb-8 pb-6 border-b border-slate-800 relative">
                             <div>
                                 <h2 class="text-2xl md:text-3xl font-black text-white">مرحباً، ${userData.fullName} 👋</h2>
                                 <p class="text-slate-400 text-sm mt-1">السنة الدراسية: <span class="text-sky-400 font-bold">${userData.academicYear === 'third' ? 'الصف الثالث الثانوي' : userData.academicYear === 'second' ? 'الصف الثاني الثانوي' : 'الصف الأول الثانوي'}</span></p>
                             </div>
-                            <button id="logout-btn" class="bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl text-xs font-bold">تسجيل الخروج</button>
+                            
+                            <!-- قائمة المينيو المنسدلة للإعدادات وخروج -->
+                            <div class="relative">
+                                <button id="menu-btn" class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl hover:border-sky-500 transition">
+                                    <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">${userData.fullName.charAt(0)}</div>
+                                    <span class="text-sm font-bold text-white hidden md:inline">${userData.fullName.split(' ')[0]}</span>
+                                    <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
+                                </button>
+                                <div id="dropdown-menu" class="hidden absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50">
+                                    <a href="#" onclick="showModal('الإعدادات', 'إعدادات الحساب الشخصي وتعديل البيانات قريباً.', 'sky')" class="block px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800">
+                                        <i class="fa-solid fa-gear ml-2"></i> الإعدادات الشخصية
+                                    </a>
+                                    <div class="border-t border-slate-800 my-1"></div>
+                                    <button id="logout-btn" class="w-full text-right block px-4 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10">
+                                        <i class="fa-solid fa-right-from-bracket ml-2"></i> تسجيل الخروج
+                                    </button>
+                                </div>
+                            </div>
                         </header>
 
-                        <!-- حاوية عرض المحاضرات أو التشغيل -->
+                        <!-- حاوية عرض المحاضرات -->
                         <div id="dynamic-area">
                             <h3 class="text-xl font-bold text-white mb-4">المحاضرات المتاحة لسنتك الدراسية</h3>
                             <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -172,6 +259,14 @@
                     </main>
                 </div>
             `;
+
+            const menuBtn = document.getElementById('menu-btn');
+            const dropdown = document.getElementById('dropdown-menu');
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('hidden');
+            });
+            window.addEventListener('click', () => dropdown.classList.add('hidden'));
 
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
             loadStudentCourses(userData, user.uid);
@@ -188,7 +283,6 @@
                     const courseId = docSnap.id;
                     const isUnlocked = userData.unlockedCourses && userData.unlockedCourses.includes(courseId);
 
-                    // فلترة حسب سنة الطالب
                     if (c.academicYear === userData.academicYear) {
                         html += `
                             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between shadow-xl">
@@ -199,11 +293,11 @@
                                 </div>
                                 <div class="mt-6">
                                     ${isUnlocked ? `
-                                        <button onclick="window.watchLesson('${c.title}', '${c.videoUrl}', '${c.description}')" class="w-full bg-emerald-500 text-slate-950 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2">
+                                        <button onclick="window.watchLesson('${c.title}', '${c.videoUrl}', '${c.description}')" class="w-full bg-emerald-500 text-slate-950 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-400 transition">
                                             <i class="fa-solid fa-play"></i> مشاهدة المحاضرة
                                         </button>
                                     ` : `
-                                        <button onclick="window.promptActivation('${courseId}', '${userId}')" class="w-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-slate-950 transition">
+                                        <button onclick="window.promptActivationModal('${courseId}', '${userId}')" class="w-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-slate-950 transition">
                                             <i class="fa-solid fa-lock"></i> أدخل كود التفعيل
                                         </button>
                                     `}
@@ -218,18 +312,20 @@
             }
         }
 
-        // نافذة تفعيل الكود للطالب
-        window.promptActivation = async function(courseId, userId) {
-            const code = prompt("أدخل كود التفعيل الخاص بهذه المحاضرة:");
-            if (!code) return;
+        // نافذة تفعيل الكود بشكل احترافي
+        window.promptActivationModal = function(courseId, userId) {
+            const userCode = prompt("أدخل كود التفعيل المكون من 6 أرقام:");
+            if (!userCode) return;
+            verifyAndUnlockCode(userCode.trim(), courseId, userId);
+        }
 
-            // البحث عن الكود في قاعدة البيانات
+        async function verifyAndUnlockCode(code, courseId, userId) {
             const codesRef = collection(db, "activation_codes");
-            const q = query(codesRef, where("code", "==", code.trim()), where("courseId", "==", courseId));
+            const q = query(codesRef, where("code", "==", code), where("courseId", "==", courseId));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
-                alert("❌ كود التفعيل غير صحيح أو لا ينتمي لهذه المحاضرة!");
+                showModal("خطأ في التفعيل", "كود التفعيل غير صحيح أو لا ينتمي لهذه المحاضرة!", "rose");
                 return;
             }
 
@@ -241,33 +337,30 @@
             });
 
             if (codeData.isUsed) {
-                alert("⚠️ عذراً، هذا الكود تم استخدامه من قبل!");
+                showModal("كود مستخدم مسبقاً", "عذراً، هذا الكود تم استخدامه من قِبل جهاز/طالب آخر ولا يمكن إعادة استخدامه!", "rose");
                 return;
             }
 
-            // تحديث الكود بأنه تم استخدامه
             await updateDoc(doc(db, "activation_codes", codeDocId), {
                 isUsed: true,
                 usedBy: userId
             });
 
-            // إضافة الكورس لقائمة الكورسات المفعلة للطالب
             await updateDoc(doc(db, "users", userId), {
                 unlockedCourses: arrayUnion(courseId)
             });
 
-            alert("🎉 مبروك! تم تفعيل المحاضرة بنجاح، استمتع بالمشاهدة.");
-            location.reload();
+            showModal("تم التفعيل بنجاح!", "مبروك! تم فتح المحاضرة لك بنجاح، يمكنك مشاهدتها الآن.");
+            setTimeout(() => location.reload(), 2000);
         }
 
-        // تشغيل الفيديو الفعلي
         window.watchLesson = function(title, videoUrl, desc) {
             let videoId = videoUrl.includes('v=') ? videoUrl.split('v=')[1]?.split('&')[0] : videoUrl.split('/').pop();
             document.getElementById('dynamic-area').innerHTML = `
-                <button onclick="location.reload()" class="mb-6 flex items-center gap-2 text-sky-400 font-bold">
-                    <i class="fa-solid fa-arrow-right"></i> العودة للمحاضرات
+                <button onclick="location.reload()" class="mb-6 flex items-center gap-2 text-sky-400 font-bold transition hover:text-sky-300">
+                    <i class="fa-solid fa-arrow-right"></i> العودة لقائمة المحاضرات
                 </button>
-                <div class="w-full aspect-video bg-black rounded-3xl overflow-hidden border border-slate-800 shadow-2xl mb-6">
+                <div class="w-full aspect-video bg-black rounded-3xl overflow-hidden border border-slate-800 shadow-2xl mb-6 relative">
                     <iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
                 </div>
                 <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
