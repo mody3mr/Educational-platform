@@ -11,6 +11,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
+    <!-- نافذة التنبيهات العامة بـ Z-Index عالي جداً -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -47,29 +48,23 @@
         </div>
     </div>
 
-    <!-- نافذة تعديل سؤال الامتحان -->
-    <div id="edit-quiz-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <!-- نافذة تعديل الإشعار -->
+    <div id="edit-notif-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl">
-            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-pen text-indigo-400 ml-2"></i>تعديل سؤال الامتحان</h3>
-            <form id="edit-quiz-form" class="space-y-3">
-                <input type="hidden" id="edit-quiz-course-id">
-                <input type="hidden" id="edit-quiz-id">
-                <input type="text" id="edit-quiz-question" required placeholder="نص السؤال" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="edit-opt0" required placeholder="الخيار الأول" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                    <input type="text" id="edit-opt1" required placeholder="الخيار الثاني" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                    <input type="text" id="edit-opt2" required placeholder="الخيار الثالث" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                    <input type="text" id="edit-opt3" required placeholder="الخيار الرابع" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs" />
-                </div>
-                <select id="edit-quiz-correct" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-xs">
-                    <option value="0">الإجابة الصحيحة: الخيار الأول</option>
-                    <option value="1">الإجابة الصحيحة: الخيار الثاني</option>
-                    <option value="2">الإجابة الصحيحة: الخيار الثالث</option>
-                    <option value="3">الإجابة الصحيحة: الخيار الرابع</option>
+            <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-bell text-sky-400 ml-2"></i>تعديل التنبيه</h3>
+            <form id="edit-notif-form" class="space-y-4">
+                <input type="hidden" id="edit-notif-id">
+                <input type="text" id="edit-notif-title" required placeholder="عنوان التنبيه" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
+                <select id="edit-notif-target" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm">
+                    <option value="all">جميع السنوات الدراسية</option>
+                    <option value="first">الصف الأول الثانوي فقط</option>
+                    <option value="second">الصف الثاني الثانوي فقط</option>
+                    <option value="third">الصف الثالث الثانوي فقط</option>
                 </select>
-                <div class="flex gap-3 pt-2">
-                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition">حفظ تعديل السؤال</button>
-                    <button type="button" onclick="document.getElementById('edit-quiz-modal').classList.add('hidden')" class="bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">إلغاء</button>
+                <textarea id="edit-notif-msg" required placeholder="نص التنبيه..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm h-20"></textarea>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3 rounded-xl transition">حفظ التعديل</button>
+                    <button type="button" onclick="document.getElementById('edit-notif-modal').classList.add('hidden')" class="bg-slate-800 text-white font-bold px-5 py-3 rounded-xl">إلغاء</button>
                 </div>
             </form>
         </div>
@@ -452,7 +447,6 @@
                 document.getElementById('generatedCodeInput').value = "";
             });
 
-            // رفع ملف PDF حقيقي لـ Firebase Storage
             document.getElementById('file-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const courseId = document.getElementById('fileCourseSelect').value;
@@ -464,7 +458,7 @@
                     return;
                 }
 
-                showModal("جاري الرفع", "يتم الآن رفع ملف PDF إلى السحابي...", "sky");
+                showModal("جاري الرفع", "يتم الآن رفع ملف PDF السحابي...", "sky");
 
                 try {
                     const file = fileInput.files[0];
@@ -491,7 +485,7 @@
                 const question = document.getElementById('quizQuestion').value;
                 const options = [
                     document.getElementById('opt0').value, document.getElementById('opt1').value,
-                    document.getElementById('opt2').value, document.getElementById('opt3').value
+                    document.getElementById('opt2').value, document.getElementById('opt3'].value
                 ];
                 const correct = parseInt(document.getElementById('quizCorrect').value);
 
@@ -514,6 +508,39 @@
                 });
                 showModal("تم بنجاح", "تم نشر التنبيه للطلاب.");
                 document.getElementById('notification-form').reset();
+            });
+
+            document.getElementById('edit-course-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('edit-course-id').value;
+                await updateDoc(doc(db, "courses", id), {
+                    title: document.getElementById('edit-title').value, subject: document.getElementById('edit-subject').value,
+                    academicYear: document.getElementById('edit-academicYear').value, videoUrl: document.getElementById('edit-videoUrl').value,
+                    description: document.getElementById('edit-description').value
+                });
+                closeEditModal();
+                showModal("تم بنجاح", "تم التعديل بنجاح!");
+            });
+
+            // حفظ تعديل السؤال
+            document.getElementById('edit-quiz-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const courseId = document.getElementById('edit-quiz-course-id').value;
+                const qId = document.getElementById('edit-quiz-id').value;
+                const question = document.getElementById('edit-quiz-question').value;
+                const options = [
+                    document.getElementById('edit-opt0').value, document.getElementById('edit-opt1').value,
+                    document.getElementById('edit-opt2').value, document.getElementById('edit-opt3').value
+                ];
+                const correct = parseInt(document.getElementById('edit-quiz-correct').value);
+
+                const target = adminCourses.find(c => c.id === courseId);
+                if (target && target.quiz) {
+                    const updatedQuiz = target.quiz.map(q => q.id === qId ? { id: qId, question, options, correct } : q);
+                    await updateDoc(doc(db, "courses", courseId), { quiz: updatedQuiz });
+                    document.getElementById('edit-quiz-modal').classList.add('hidden');
+                    showModal("تم بنجاح", "تم تعديل السؤال بنجاح!");
+                }
             });
 
             document.getElementById('export-excel-btn')?.addEventListener('click', async () => {
@@ -619,8 +646,11 @@
 
                     let quizListHtml = (c.quiz || []).map((q, qIdx) => `
                         <div class="flex justify-between items-center bg-slate-900 px-2 py-1 rounded text-[11px] mb-1">
-                            <span class="truncate max-w-[150px] text-indigo-300">س${qIdx+1}: ${q.question}</span>
-                            <button onclick="window.deleteQuizQuestion('${c.id}', '${q.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
+                            <span class="truncate max-w-[130px] text-indigo-300">س${qIdx+1}: ${q.question}</span>
+                            <div class="flex gap-2">
+                                <button onclick="window.openEditQuizModal('${c.id}', '${q.id}', '${q.question}', ${q.correct}, ${JSON.stringify(q.options).replace(/"/g, '&quot;')})" class="text-sky-400 hover:text-white"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="window.deleteQuizQuestion('${c.id}', '${q.id}')" class="text-rose-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </div>
                     `).join('') || '<span class="text-slate-500 text-[11px]">لا توجد أسئلة</span>';
 
@@ -634,10 +664,12 @@
                                 <h4 class="text-base font-bold text-white">${c.title}</h4>
                                 <p class="text-slate-400 text-xs mt-1">السنة: ${yearText} | الوقت: ${c.quizDuration || 10} د</p>
                                 <div class="mt-3 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الملفات:</p><div class="max-h-24 overflow-y-auto">${filesListHtml}</div></div>
-                                <div class="mt-2 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الامتحان:</p><div class="max-h-24 overflow-y-auto">${quizListHtml}</div></div>
+                                <div class="mt-2 border-t border-slate-900 pt-2"><p class="text-[11px] font-bold text-slate-400 mb-1">الامتحان (تعديل/حذف):</p><div class="max-h-24 overflow-y-auto">${quizListHtml}</div></div>
                             </div>
                             <div class="grid grid-cols-3 gap-2 pt-2">
-                                <button onclick="window.deleteCourse('${c.id}')" class="col-span-3 bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold">حذف المحاضرة</button>
+                                <button onclick="window.openEditModal('${c.id}', '${c.title}', '${c.subject}', '${c.academicYear}', '${c.videoUrl}', '${c.description}')" class="bg-sky-500/10 text-sky-400 text-xs py-2 rounded-xl font-bold">تعديل</button>
+                                <button onclick="window.toggleCourseStatus('${c.id}', ${isActive})" class="bg-slate-800 text-xs py-2 rounded-xl font-bold">${isActive ? 'إيقاف' : 'تشغيل'}</button>
+                                <button onclick="window.deleteCourse('${c.id}')" class="bg-rose-500/10 text-rose-400 text-xs py-2 rounded-xl font-bold">حذف</button>
                             </div>
                         </div>
                     `;
@@ -649,6 +681,109 @@
             if(quizSelect) quizSelect.innerHTML = quizSelectHtml;
             if(resultsCourseFilter && resultsCourseFilter.options.length <= 1) resultsCourseFilter.innerHTML = resultsFilterHtml;
             if(coursesGrid) coursesGrid.innerHTML = coursesHtml || '<p class="text-slate-500 col-span-full">لا توجد محاضرات مطابقة</p>';
+
+            const reqTbody = document.getElementById('requests-table-body');
+            let reqHtml = '';
+            adminRequests.forEach(req => {
+                if (req.status === 'pending') {
+                    reqHtml += `
+                        <tr class="border-b border-slate-800/60">
+                            <td class="p-3 font-bold text-white">${req.currentName}</td>
+                            <td class="p-3 text-xs space-y-1">الاسم: <span class="text-sky-400">${req.newFullName}</span><br>هاتف: <span class="text-sky-400">${req.newStudentPhone}</span></td>
+                            <td class="p-3 flex gap-2">
+                                <button onclick="window.approveRequest('${req.id}', '${req.userId}', '${req.newFullName}', '${req.newStudentPhone}', '${req.newFatherPhone}', '${req.newMotherPhone}', '${req.newSchool}', '${req.newGovernorate}')" class="bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold text-white">موافقة</button>
+                                <button onclick="window.rejectRequest('${req.id}', '${req.userId}')" class="bg-rose-500/10 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold">رفض</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(reqTbody) reqTbody.innerHTML = reqHtml || '<tr><td colspan="3" class="p-4 text-center text-slate-500">لا توجد طلبات معلقة</td></tr>';
+
+            let studentsMap = {};
+            adminUsers.forEach(st => { studentsMap[st.id] = `${st.fullName || 'بدون اسم'} / ${st.studentPhone || '-'}`; });
+
+            const studentsTbody = document.getElementById('students-table-body');
+            const searchTerm = document.getElementById('student-search')?.value.toLowerCase() || '';
+            let studentsHtml = '';
+            adminUsers.forEach(st => {
+                const fullName = (st.fullName || '').toLowerCase();
+                const phone = (st.studentPhone || '').toLowerCase();
+                const nationalId = (st.nationalId || '').toLowerCase();
+                if (searchTerm === '' || fullName.includes(searchTerm) || phone.includes(searchTerm) || nationalId.includes(searchTerm)) {
+                    const isDeviceBlocked = st.deviceBlocked || false;
+                    studentsHtml += `
+                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                            <td class="p-3 font-bold text-white">${st.fullName}</td>
+                            <td class="p-3 text-xs">طالب: <span class="font-mono text-sky-400">${st.studentPhone || '-'}</span></td>
+                            <td class="p-3 font-mono text-xs">${st.nationalId || '-'}</td>
+                            <td class="p-3 text-xs">${st.school || '-'} (${st.governorate || '-'})</td>
+                            <td class="p-3 text-xs font-bold">${st.academicYear === 'third' ? 'الثالث' : st.academicYear === 'second' ? 'الثاني' : 'الأول'} الثانوي</td>
+                            <td class="p-3 flex items-center gap-2">
+                                ${isDeviceBlocked ? '<span class="text-rose-400 text-xs font-bold">محظور</span>' : '<span class="text-emerald-400 text-xs font-bold">مسموح</span>'}
+                                <button onclick="window.toggleDeviceBlock('${st.id}', ${isDeviceBlocked})" class="bg-slate-800 text-xs px-3 py-1.5 rounded-lg font-bold">${isDeviceBlocked ? 'رفع الحظر' : 'حظر الجهاز'}</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(studentsTbody) studentsTbody.innerHTML = studentsHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مطابقة</td></tr>';
+
+            const codesTbody = document.getElementById('codes-table-body');
+            const codeStatusFilter = document.getElementById('filter-code-status')?.value || 'all';
+            let codesHtml = '';
+            adminCodes.forEach(codeObj => {
+                const courseInfo = coursesMap[codeObj.courseId] || { title: 'محاضرة محذوفة', year: '-' };
+                const courseLabel = `${courseInfo.title} / ${courseInfo.year}`;
+                const isDisabled = codeObj.isDisabled || false;
+                const isUsed = codeObj.isUsed || false;
+                let matchesFilter = true;
+                if (codeStatusFilter === 'available' && (isUsed || isDisabled)) matchesFilter = false;
+                if (codeStatusFilter === 'used' && !isUsed) matchesFilter = false;
+                if (codeStatusFilter === 'disabled' && !isDisabled) matchesFilter = false;
+
+                if (matchesFilter) {
+                    const studentDetails = codeObj.usedBy ? (studentsMap[codeObj.usedBy] || codeObj.usedBy) : 'لا يوجد';
+                    codesHtml += `
+                        <tr class="border-b border-slate-800/60 hover:bg-slate-800/30">
+                            <td class="p-3 font-mono text-amber-400 font-bold">${codeObj.code}</td>
+                            <td class="p-3 text-xs text-sky-300 font-semibold">${courseLabel}</td>
+                            <td class="p-3">${isUsed ? '<span class="bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-lg text-xs font-bold">مستخدم</span>' : (isDisabled ? '<span class="bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-xs font-bold">معطل</span>' : '<span class="bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-lg text-xs font-bold">متاح</span>')}</td>
+                            <td class="p-3 text-xs text-slate-300">${studentDetails}</td>
+                            <td class="p-3 flex gap-2">
+                                <button onclick="window.toggleCodeStatus('${codeObj.id}', ${isDisabled})" class="bg-slate-800 px-3 py-1 rounded-lg text-xs font-bold">${isDisabled ? 'تفعيل' : 'تعطيل'}</button>
+                                <button onclick="window.deleteCode('${codeObj.id}', '${codeObj.usedBy || ''}', '${codeObj.courseId || ''}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(codesTbody) codesTbody.innerHTML = codesHtml || '<tr><td colspan="5" class="p-4 text-center text-slate-500">لا توجد أكواد مطابقة</td></tr>';
+
+            const notifBody = document.getElementById('admin-notifications-body');
+            const notifFilter = document.getElementById('filter-notif-target')?.value || 'all';
+            let notifHtml = '';
+            adminNotifications.forEach(n => {
+                const targetText = n.targetYear === 'all' ? 'جميع السنوات' : (n.targetYear === 'third' ? 'الثالث الثانوي' : n.targetYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي');
+                let matchesNotifFilter = true;
+                if (notifFilter === 'all_years' && n.targetYear !== 'all') matchesNotifFilter = false;
+                if (notifFilter !== 'all' && notifFilter !== 'all_years' && n.targetYear !== notifFilter) matchesNotifFilter = false;
+
+                if (matchesNotifFilter) {
+                    notifHtml += `
+                        <tr class="border-b border-slate-800/60">
+                            <td class="p-3 font-bold text-white">${n.title}</td>
+                            <td class="p-3 text-xs text-sky-400">${targetText}</td>
+                            <td class="p-3 text-xs truncate max-w-xs">${n.message}</td>
+                            <td class="p-3 flex gap-2">
+                                <button onclick="window.openEditNotifModal('${n.id}', '${n.title}', '${n.targetYear}', '${n.message}')" class="bg-sky-500/10 text-sky-400 px-3 py-1 rounded-lg text-xs font-bold">تعديل</button>
+                                <button onclick="window.deleteNotification('${n.id}')" class="bg-rose-500/10 text-rose-400 px-3 py-1 rounded-lg text-xs font-bold">حذف</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            if(notifBody) notifBody.innerHTML = notifHtml || '<tr><td colspan="4" class="p-4 text-center text-slate-500">لا توجد تنبيهات</td></tr>';
 
             const resultsBody = document.getElementById('quiz-results-body');
             const courseFilterId = document.getElementById('filter-results-course')?.value || 'all';
@@ -671,6 +806,18 @@
                 }
             });
             if(resultsBody) resultsBody.innerHTML = resHtml || '<tr><td colspan="6" class="p-4 text-center text-slate-500">لا توجد نتائج مسجلة</td></tr>';
+        }
+
+        window.openEditQuizModal = function(courseId, qId, question, correct, options) {
+            document.getElementById('edit-quiz-course-id').value = courseId;
+            document.getElementById('edit-quiz-id').value = qId;
+            document.getElementById('edit-quiz-question').value = question;
+            document.getElementById('edit-opt0').value = options[0] || '';
+            document.getElementById('edit-opt1').value = options[1] || '';
+            document.getElementById('edit-opt2').value = options[2] || '';
+            document.getElementById('edit-opt3').value = options[3] || '';
+            document.getElementById('edit-quiz-correct').value = correct;
+            document.getElementById('edit-quiz-modal').classList.remove('hidden');
         }
 
         window.deleteCourseFile = async function(courseId, fileId) {
@@ -708,8 +855,71 @@
             });
         }
 
+        window.openEditModal = function(id, title, subject, academicYear, videoUrl, description) {
+            document.getElementById('edit-course-id').value = id;
+            document.getElementById('edit-title').value = title;
+            document.getElementById('edit-subject').value = subject;
+            document.getElementById('edit-academicYear').value = academicYear;
+            document.getElementById('edit-videoUrl').value = videoUrl;
+            document.getElementById('edit-description').value = description;
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        window.openEditNotifModal = function(id, title, targetYear, message) {
+            document.getElementById('edit-notif-id').value = id;
+            document.getElementById('edit-notif-title').value = title;
+            document.getElementById('edit-notif-target').value = targetYear;
+            document.getElementById('edit-notif-msg').value = message;
+            document.getElementById('edit-notif-modal').classList.remove('hidden');
+        }
+
+        window.toggleCourseStatus = async function(id, currentStatus) {
+            await updateDoc(doc(db, "courses", id), { isActive: !currentStatus });
+        };
+
+        window.toggleCodeStatus = async function(id, currentStatus) {
+            await updateDoc(doc(db, "activation_codes", id), { isDisabled: !currentStatus });
+        };
+
         window.deleteCourse = async function(id) {
             showModal("تأكيد الحذف", "حذف المحاضرة؟", "rose", async () => { await deleteDoc(doc(db, "courses", id)); });
+        };
+
+        window.deleteNotification = async function(id) {
+            showModal("تأكيد الحذف", "حذف التنبيه؟", "rose", async () => { await deleteDoc(doc(db, "notifications", id)); });
+        };
+
+        window.deleteCode = async function(id, usedByUserId, courseId) {
+            showModal("تأكيد الحذف", "حذف الكود؟", "rose", async () => {
+                if (usedByUserId && courseId) {
+                    try { await updateDoc(doc(db, "users", usedByUserId), { unlockedCourses: arrayRemove(courseId) }); } catch(e){}
+                }
+                await deleteDoc(doc(db, "activation_codes", id));
+            });
+        };
+
+        window.toggleDeviceBlock = async function(userId, currentStatus) {
+            await updateDoc(doc(db, "users", userId), { deviceBlocked: !currentStatus });
+        };
+
+        window.approveRequest = async function(reqId, userId, newName, newStudentPhone, newFatherPhone, newMotherPhone, newSchool, newGovernorate) {
+            await updateDoc(doc(db, "users", userId), {
+                fullName: newName, studentPhone: newStudentPhone, fatherPhone: newFatherPhone,
+                motherPhone: newMotherPhone, school: newSchool, governorate: newGovernorate
+            });
+            await updateDoc(doc(db, "profile_requests", reqId), { status: 'approved' });
+            await addDoc(collection(db, "notifications"), {
+                title: "تمت الموافقة على تعديل البيانات", message: "تم تحديث بياناتك بنجاح.", targetUserId: userId, createdAt: new Date()
+            });
+            showModal("تم", "تمت الموافقة بنجاح.");
+        };
+
+        window.rejectRequest = async function(reqId, userId) {
+            await updateDoc(doc(db, "profile_requests", reqId), { status: 'rejected' });
+            await addDoc(collection(db, "notifications"), {
+                title: "تم رفض طلب تعديل البيانات", message: "عذراً، تم رفض طلبك.", targetUserId: userId, createdAt: new Date()
+            });
+            showModal("تم", "تم الرفض.");
         };
     </script>
 </body>
