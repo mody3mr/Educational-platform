@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- مكتبة pdf-lib لدمج العلامة المائية للطالب عند التحميل -->
+    <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <style>
         body { font-family: 'Cairo', sans-serif; user-select: none; }
         ::-webkit-scrollbar { width: 8px; }
@@ -16,7 +18,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-sky-500 selection:text-slate-950">
 
-    <!-- نافذة منبثقة عامة للتنبيهات بـ Z-Index عالي جداً -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -28,7 +29,6 @@
         </div>
     </div>
 
-    <!-- نافذة إدخال كود التفعيل -->
     <div id="activation-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div class="w-14 h-14 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -44,7 +44,7 @@
         </div>
     </div>
 
-    <!-- نافذة إعدادات الطالب -->
+    <!-- نافذة الإعدادات -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-gear text-sky-400 ml-2"></i>الإعدادات الشخصية</h3>
@@ -67,7 +67,6 @@
         </div>
     </div>
 
-    <!-- نافذة الإشعارات -->
     <div id="notifications-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
@@ -108,14 +107,6 @@
         const db = getFirestore(app);
         const appDiv = document.getElementById('app');
 
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.key === 'PrintScreen' || (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
-                e.preventDefault();
-                showModal("تنبيه أمني", "عذراً، عمليات التصوير أو النسخ أو فحص الشاشة محظورة.", "rose");
-            }
-        });
-
         window.showModal = function(title, text, type = "sky") {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-text').innerText = text;
@@ -138,6 +129,7 @@
 
         let currentActiveCourseId = null;
         let currentUserId = null;
+        let currentUserData = null;
 
         window.openActivationModal = function(courseId, userId) {
             currentActiveCourseId = courseId;
@@ -157,13 +149,13 @@
             if (user) {
                 onSnapshot(doc(db, "users", user.uid), (userSnap) => {
                     if (userSnap.exists()) {
-                        const userData = userSnap.data();
-                        if(userData.deviceBlocked) {
+                        currentUserData = userSnap.data();
+                        if(currentUserData.deviceBlocked) {
                             signOut(auth);
                             showModal("جهاز محظور أمنياً", "عذراً، تم حظر هذا الجهاز.", "rose");
                             return;
                         }
-                        renderDashboard(user, userData);
+                        renderDashboard(user, currentUserData);
                     } else {
                         renderProfileForm(user);
                     }
@@ -265,7 +257,7 @@
                         <header class="flex justify-between items-center mb-8 pb-6 border-b border-slate-800 relative">
                             <div>
                                 <h2 class="text-2xl md:text-3xl font-black text-white">مرحباً، ${userData.fullName} 👋</h2>
-                                <p class="text-slate-400 text-sm mt-1">السنة الدراسية: <span class="text-sky-400 font-bold">${userData.academicYear === 'third' ? 'الثالث الثانوي' : userData.academicYear === 'second' ? 'الصف الثاني الثانوي' : 'الأول الثانوي'}</span></p>
+                                <p class="text-slate-400 text-sm mt-1">السنة الدراسية: <span class="text-sky-400 font-bold">${userData.academicYear === 'third' ? 'الثالث الثانوي' : userData.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي'}</span></p>
                             </div>
                             
                             <div class="flex items-center gap-3">
@@ -309,7 +301,6 @@
             window.addEventListener('click', () => dropdown.classList.add('hidden'));
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-            // تشغيل الـ Listeners المنفصلة بأمان تام
             setupStudentRealtimeData(user, userData);
         }
 
@@ -336,7 +327,6 @@
                 refreshStudentView(userData, user.uid);
             });
 
-            // استماع حي لنتائج اختبارات الطالب
             onSnapshot(collection(db, "quiz_results"), (snap) => {
                 window.studentQuizResults = {};
                 snap.forEach(d => {
@@ -491,20 +481,37 @@
             showModal("تم التفعيل بنجاح!", "مبروك! تم فتح المحاضرة لك بنجاح.");
         }
 
+        // عرض المحاضرة مع تصفح الـ PDF مباشرة داخل الموقع + العلامة المائية المرئية + زر التحميل الآمن
         window.openCourseView = function(courseId) {
             const c = window.allCoursesData[courseId];
             if(!c) return;
 
             let videoId = c.videoUrl.includes('v=') ? c.videoUrl.split('v=')[1]?.split('&')[0] : c.videoUrl.split('/').pop();
+            const studentName = currentUserData ? currentUserData.fullName : "طالب";
+            const studentPhone = currentUserData ? currentUserData.studentPhone : "";
             
             let filesHtml = (c.files || []).map(f => `
-                <a href="${f.url}" target="_blank" class="flex items-center justify-between bg-slate-950 border border-slate-800 p-4 rounded-2xl hover:border-rose-500 transition">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-file-pdf text-rose-500 text-xl"></i>
-                        <span class="font-bold text-sm text-white">${f.title}</span>
+                <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-file-pdf text-rose-500 text-xl"></i>
+                            <span class="font-bold text-sm text-white">${f.title}</span>
+                        </div>
+                        <button onclick="window.downloadWatermarkedPdf('${f.url}', '${studentName}', '${studentPhone}')" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition">
+                            <i class="fa-solid fa-download ml-1"></i> تحميل بالعلامة المائية
+                        </button>
                     </div>
-                    <span class="bg-rose-500/10 text-rose-400 text-xs px-3 py-1.5 rounded-xl font-bold">تحميل</span>
-                </a>
+                    <!-- عارض الـ PDF المباشر مع طبقة العلامة المائية الحماية للعين -->
+                    <div class="w-full h-72 bg-slate-900 rounded-xl overflow-hidden relative border border-slate-800">
+                        <div class="absolute inset-0 pointer-events-none z-20 flex flex-wrap items-center justify-around opacity-15 rotate-[-25deg] select-none overflow-hidden text-xs font-black text-white">
+                            <span>${studentName} - ${studentPhone}</span>
+                            <span>${studentName} - ${studentPhone}</span>
+                            <span>${studentName} - ${studentPhone}</span>
+                            <span>${studentName} - ${studentPhone}</span>
+                        </div>
+                        <iframe src="${f.url}#toolbar=0" class="w-full h-full"></iframe>
+                    </div>
+                </div>
             `).join('') || `<p class="text-slate-500 text-xs">لا توجد ملفات مرفقة.</p>`;
 
             const studentRes = window.studentQuizResults ? window.studentQuizResults[courseId] : null;
@@ -554,8 +561,8 @@
 
                     <div class="space-y-6">
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-folder-open text-rose-400 ml-2"></i>الملفات الدراسية</h3>
-                            <div class="space-y-2">${filesHtml}</div>
+                            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-folder-open text-rose-400 ml-2"></i>الملفات الدراسية (معاينة وتحميل آمن)</h3>
+                            <div class="space-y-3">${filesHtml}</div>
                         </div>
 
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
@@ -565,6 +572,39 @@
                     </div>
                 </div>
             `;
+        }
+
+        // دالة دمج العلامة المائية للطالب داخل ملف الـ PDF عند التحميل عبر مكتبة pdf-lib
+        window.downloadWatermarkedPdf = async function(url, studentName, studentPhone) {
+            showModal("جاري التجهيز", "جاري دمج علامتك المائية الخاصة وتجهيز الملف للتحميل...", "sky");
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                const pages = pdfDoc.getPages();
+                
+                for (const page of pages) {
+                    const { width, height } = page.getSize();
+                    page.drawText(`خاص بالطالب: ${studentName} - ${studentPhone}`, {
+                        x: 40,
+                        y: height / 2,
+                        size: 22,
+                        color: PDFLib.rgb(0.6, 0.6, 0.6),
+                        opacity: 0.35,
+                        rotate: PDFLib.degrees(45),
+                    });
+                }
+                
+                const modifiedPdfBytes = await pdfDoc.save();
+                const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `protected_document_${Date.now()}.pdf`;
+                link.click();
+                closeModal();
+            } catch (err) {
+                showModal("خطأ", "فشل تحميل الملف بالعلامة المائية: " + err.message, "rose");
+            }
         }
 
         let quizTimerInterval = null;
@@ -669,9 +709,7 @@
             }
 
             const user = auth.currentUser;
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            const studentName = userDoc.exists() ? userDoc.data().fullName : "طالب";
-
+            const studentName = currentUserData ? currentUserData.fullName : "طالب";
             const existingRes = window.studentQuizResults ? window.studentQuizResults[courseId] : null;
 
             if (existingRes && existingRes.id) {
