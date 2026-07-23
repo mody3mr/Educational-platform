@@ -16,7 +16,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-sky-500 selection:text-slate-950">
 
-    <!-- نافذة منبثقة مخصصة بدل التنبيهات البدائية -->
     <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div id="modal-icon" class="w-14 h-14 bg-sky-500/20 text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
@@ -56,12 +55,11 @@
         const db = getFirestore(app);
         const appDiv = document.getElementById('app');
 
-        // حماية متقدمة ضد السكرين شوت والنسخ وتصوير الشاشة
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
             if (e.key === 'PrintScreen' || (e.ctrlKey && e.shiftKey && ['I', 'C', 'J'].includes(e.key.toUpperCase())) || (e.ctrlKey && e.key.toUpperCase() === 'U')) {
                 e.preventDefault();
-                showModal("تنبيه أمني", "عذراً، عمليات التصوير أو النسخ أو فحص الشاشة محظورة حماية لحقوق المعلم.", "rose");
+                showModal("تنبيه أمني", "عذراً، عمليات التصوير أو النسخ أو فحص الشاشة محظورة.", "rose");
             }
         });
 
@@ -91,7 +89,7 @@
                     const userData = userSnap.data();
                     if(userData.isBlocked) {
                         signOut(auth);
-                        showModal("حساب محظور", "عذراً، تم حظرك من قبل إدارة المنصة. تواصل مع الدعم الفني.", "rose");
+                        showModal("حساب محظور", "عذراً، تم حظرك من قبل إدارة المنصة.", "rose");
                         return;
                     }
                     renderDashboard(user, userData);
@@ -113,7 +111,7 @@
                         </div>
                         <form id="auth-form" class="space-y-4">
                             <input type="email" id="email" required placeholder="البريد الإلكتروني" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
-                            <input type="password" id="password" required placeholder="كلمة المرور (6 أحرف فأكثر)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
+                            <input type="password" id="password" required placeholder="كلمة المرور" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm outline-none focus:border-sky-500" />
                             <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3 rounded-xl transition">دخول / إنشاء حساب</button>
                         </form>
                     </div>
@@ -121,15 +119,13 @@
             `;
             document.getElementById('auth-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const email = document.getElementById('email').value;
-                const pass = document.getElementById('password').value;
                 try {
-                    await signInWithEmailAndPassword(auth, email, pass);
+                    await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
                 } catch {
                     try {
-                        await createUserWithEmailAndPassword(auth, email, pass);
+                        await createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value);
                     } catch {
-                        showModal("خطأ في المصادقة", "تأكد من كتابة البريد بشكل صحيح أو أن كلمة المرور 6 أحرف على الأقل.", "rose");
+                        showModal("خطأ", "تأكد من صحة البيانات أو أن كلمة المرور 6 أحرف على الأقل.", "rose");
                     }
                 }
             });
@@ -140,8 +136,7 @@
                 <div class="min-h-screen flex items-center justify-center p-6">
                     <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
                         <h2 class="text-2xl font-black text-white mb-2">استكمال بيانات الطالب الشخصية</h2>
-                        <p class="text-slate-400 text-sm mb-6">هذه البيانات تُسجل مرة واحدة وترتبط بحسابك للأبد.</p>
-                        <form id="profile-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <form id="profile-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <input type="text" id="fullName" required placeholder="الاسم الرباعي" class="md:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
                             <input type="tel" id="studentPhone" required placeholder="رقم هاتف الطالب" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
                             <input type="tel" id="fatherPhone" required placeholder="رقم هاتف الأب" class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-white text-sm" />
@@ -154,7 +149,7 @@
                                 <option value="second">الصف الثاني الثانوي</option>
                                 <option value="third">الصف الثالث الثانوي</option>
                             </select>
-                            <button type="submit" class="md:col-span-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3.5 rounded-xl transition">حفظ البيانات والانتقال للمنصة</button>
+                            <button type="submit" class="md:col-span-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold py-3.5 rounded-xl transition">حفظ والانتقال للمنصة</button>
                         </form>
                     </div>
                 </div>
@@ -165,16 +160,12 @@
                 const studentPhone = document.getElementById('studentPhone').value.trim();
                 const nationalId = document.getElementById('nationalId').value.trim();
 
-                // فحص عدم تكرار رقم الهاتف أو الرقم القومي في قاعدة البيانات
                 const usersRef = collection(db, "users");
                 const qPhone = query(usersRef, where("studentPhone", "==", studentPhone));
                 const qId = query(usersRef, where("nationalId", "==", nationalId));
                 
-                const phoneSnap = await getDocs(qPhone);
-                const idSnap = await getDocs(qId);
-
-                if (!phoneSnap.empty || !idSnap.empty) {
-                    showModal("تنبيه تكرار الحساب", "رقم الهاتف أو الرقم القومي مُسجل مسبقاً بحساب آخر في النظام!", "rose");
+                if (!(await getDocs(qPhone)).empty || !(await getDocs(qId)).empty) {
+                    showModal("تنبيه تكرار", "رقم الهاتف أو الرقم القومي مُسجل مسبقاً بحساب آخر!", "rose");
                     return;
                 }
 
@@ -199,7 +190,6 @@
         async function renderDashboard(user, userData) {
             appDiv.innerHTML = `
                 <div class="min-h-screen flex flex-col md:flex-row">
-                    <!-- القائمة الجانبية -->
                     <aside class="w-full md:w-72 bg-slate-900 border-l border-slate-800 p-6 hidden md:flex flex-col justify-between">
                         <div>
                             <div class="flex items-center gap-3 mb-10 px-2">
@@ -215,22 +205,17 @@
                                 <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl font-bold bg-sky-500 text-slate-950">
                                     <i class="fa-solid fa-play-circle"></i> كورساتي المفعلة
                                 </a>
-                                <a href="#" onclick="showModal('تنبيه', 'قسم الاختبارات قريبأً!', 'sky')" class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-400 hover:bg-slate-800">
-                                    <i class="fa-solid fa-clipboard-question"></i> الاختبارات والواجبات
-                                </a>
                             </nav>
                         </div>
                     </aside>
 
-                    <!-- المحتوى الرئيسي -->
                     <main class="flex-1 p-6 md:p-10 overflow-y-auto">
                         <header class="flex justify-between items-center mb-8 pb-6 border-b border-slate-800 relative">
                             <div>
                                 <h2 class="text-2xl md:text-3xl font-black text-white">مرحباً، ${userData.fullName} 👋</h2>
-                                <p class="text-slate-400 text-sm mt-1">السنة الدراسية: <span class="text-sky-400 font-bold">${userData.academicYear === 'third' ? 'الصف الثالث الثانوي' : userData.academicYear === 'second' ? 'الصف الثاني الثانوي' : 'الصف الأول الثانوي'}</span></p>
+                                <p class="text-slate-400 text-sm mt-1">السنة الدراسية: <span class="text-sky-400 font-bold">${userData.academicYear === 'third' ? 'الثالث الثانوي' : userData.academicYear === 'second' ? 'الثاني الثانوي' : 'الأول الثانوي'}</span></p>
                             </div>
                             
-                            <!-- قائمة المينيو المنسدلة للإعدادات وخروج -->
                             <div class="relative">
                                 <button id="menu-btn" class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl hover:border-sky-500 transition">
                                     <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">${userData.fullName.charAt(0)}</div>
@@ -238,10 +223,6 @@
                                     <i class="fa-solid fa-chevron-down text-xs text-slate-400"></i>
                                 </button>
                                 <div id="dropdown-menu" class="hidden absolute left-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50">
-                                    <a href="#" onclick="showModal('الإعدادات', 'إعدادات الحساب الشخصي وتعديل البيانات قريباً.', 'sky')" class="block px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800">
-                                        <i class="fa-solid fa-gear ml-2"></i> الإعدادات الشخصية
-                                    </a>
-                                    <div class="border-t border-slate-800 my-1"></div>
                                     <button id="logout-btn" class="w-full text-right block px-4 py-2.5 text-sm text-rose-400 hover:bg-rose-500/10">
                                         <i class="fa-solid fa-right-from-bracket ml-2"></i> تسجيل الخروج
                                     </button>
@@ -249,7 +230,6 @@
                             </div>
                         </header>
 
-                        <!-- حاوية عرض المحاضرات -->
                         <div id="dynamic-area">
                             <h3 class="text-xl font-bold text-white mb-4">المحاضرات المتاحة لسنتك الدراسية</h3>
                             <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -282,8 +262,14 @@
                     const c = docSnap.data();
                     const courseId = docSnap.id;
                     const isUnlocked = userData.unlockedCourses && userData.unlockedCourses.includes(courseId);
+                    const isActive = c.isActive !== false; // التحقق هل المحاضرة نشطة وليست موقوفة
 
                     if (c.academicYear === userData.academicYear) {
+                        if (!isActive) {
+                            // لو المحاضرة موقوفة من المعلم لا تظهر أو تظهر بشكل متوقف
+                            return;
+                        }
+
                         html += `
                             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col justify-between shadow-xl">
                                 <div>
@@ -306,13 +292,12 @@
                         `;
                     }
                 });
-                grid.innerHTML = html || '<p class="text-slate-400">لا توجد محاضرات مضافة لسنتك الدراسية حالياً.</p>';
+                grid.innerHTML = html || '<p class="text-slate-400">لا توجد محاضرات نشطة مضافة لسنتك الدراسية حالياً.</p>';
             } catch (err) {
                 grid.innerHTML = '<p class="text-rose-400">حدث خطأ في تحميل المحاضرات.</p>';
             }
         }
 
-        // نافذة تفعيل الكود بشكل احترافي
         window.promptActivationModal = function(courseId, userId) {
             const userCode = prompt("أدخل كود التفعيل المكون من 6 أرقام:");
             if (!userCode) return;
@@ -336,8 +321,13 @@
                 codeData = doc.data();
             });
 
+            if (codeData.isDisabled) {
+                showModal("كود معطل", "عذراً، هذا الكود معطّل مؤقتاً من قِبل إدارة المنصة.", "rose");
+                return;
+            }
+
             if (codeData.isUsed) {
-                showModal("كود مستخدم مسبقاً", "عذراً، هذا الكود تم استخدامه من قِبل جهاز/طالب آخر ولا يمكن إعادة استخدامه!", "rose");
+                showModal("كود مستخدم مسبقاً", "عذراً، هذا الكود تم استخدامه من قِبل جهاز/طالب آخر!", "rose");
                 return;
             }
 
@@ -350,7 +340,7 @@
                 unlockedCourses: arrayUnion(courseId)
             });
 
-            showModal("تم التفعيل بنجاح!", "مبروك! تم فتح المحاضرة لك بنجاح، يمكنك مشاهدتها الآن.");
+            showModal("تم التفعيل بنجاح!", "مبروك! تم فتح المحاضرة لك بنجاح.");
             setTimeout(() => location.reload(), 2000);
         }
 
